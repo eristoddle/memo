@@ -19,9 +19,10 @@ const (
 	CodeTopicFollow       = 0x0d
 	CodeTopicUnfollow     = 0x0e
 
-	CodePollCreate = 0x10
-	CodePollOption = 0x13
-	CodePollVote   = 0x14
+	CodePollCreate     = 0x10
+	CodePollOption     = 0x13
+	CodePollVote       = 0x14
+	CodePrivateMessage = 0x15
 )
 
 const (
@@ -50,6 +51,7 @@ func GetAllCodes() [][]byte {
 		{CodePrefix, CodePollVote},
 		{CodePrefix, CodeTopicFollow},
 		{CodePrefix, CodeTopicUnfollow},
+		{CodePrefix, CodePrivateMessage},
 	}
 }
 
@@ -83,6 +85,8 @@ func GetCodeString(code byte) string {
 		return StringMemoTopicFollow
 	case CodeTopicUnfollow:
 		return StringMemoTopicUnfollow
+	case CodePrivateMessage:
+		return StringMemoPrivateMessage
 	default:
 		return "unknown"
 	}

@@ -3,7 +3,7 @@ package memo
 type OutputType uint
 
 const (
-	OutputTypeP2PK                        OutputType = iota
+	OutputTypeP2PK OutputType = iota
 	OutputTypeReturn
 	OutputTypeMemoMessage
 	OutputTypeMemoSetName
@@ -20,25 +20,27 @@ const (
 	OutputTypeMemoPollOption
 	OutputTypeMemoPollVote
 	OutputTypeMemoSetProfilePic
+	OutputTypeMemoPrivateMessage
 )
 
 const (
-	StringP2pk              = "p2pk"
-	StringReturn            = "return"
-	StringMemoMessage       = "memo-message"
-	StringMemoSetName       = "memo-set-name"
-	StringMemoFollow        = "memo-follow"
-	StringMemoUnfollow      = "memo-unfollow"
-	StringMemoLike          = "memo-like"
-	StringMemoReply         = "memo-reply"
-	StringMemoSetProfile    = "memo-set-profile"
-	StringMemoSetProfilePic = "memo-set-profile-pic"
-	StringMemoTopicMessage  = "topic-message"
-	StringMemoTopicFollow   = "topic-follow"
-	StringMemoTopicUnfollow = "topic-unfollow"
-	StringMemoPollQuestion  = "poll-question"
-	StringMemoPollOption    = "poll-option"
-	StringMemoPollVote      = "poll-vote"
+	StringP2pk               = "p2pk"
+	StringReturn             = "return"
+	StringMemoMessage        = "memo-message"
+	StringMemoSetName        = "memo-set-name"
+	StringMemoFollow         = "memo-follow"
+	StringMemoUnfollow       = "memo-unfollow"
+	StringMemoLike           = "memo-like"
+	StringMemoReply          = "memo-reply"
+	StringMemoSetProfile     = "memo-set-profile"
+	StringMemoSetProfilePic  = "memo-set-profile-pic"
+	StringMemoTopicMessage   = "topic-message"
+	StringMemoTopicFollow    = "topic-follow"
+	StringMemoTopicUnfollow  = "topic-unfollow"
+	StringMemoPollQuestion   = "poll-question"
+	StringMemoPollOption     = "poll-option"
+	StringMemoPollVote       = "poll-vote"
+	StringMemoPrivateMessage = "private-message"
 )
 
 func (s OutputType) String() string {
@@ -75,6 +77,8 @@ func (s OutputType) String() string {
 		return StringMemoPollVote
 	case OutputTypeMemoSetProfilePic:
 		return StringMemoSetProfilePic
+	case OutputTypeMemoPrivateMessage:
+		return StringMemoPrivateMessage
 	default:
 		return "unknown"
 	}

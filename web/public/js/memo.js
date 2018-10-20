@@ -16,6 +16,101 @@
     /**
      * @param {jQuery} $form
      */
+    MemoApp.Form.PrivateMessage = function ($form) {
+        var $message = $form.find("[name=message]");
+        var $msgByteCount = $form.find(".message-byte-count");
+        $message.on("input", function () {
+            setMsgByteCount();
+        });
+
+        function setMsgByteCount() {
+            var cnt = maxPostBytes - MemoApp.utf8ByteLength($message.val());
+            $msgByteCount.html("[" + cnt + "]");
+            if (cnt < 0) {
+                $msgByteCount.addClass("red");
+            } else {
+                $msgByteCount.removeClass("red");
+            }
+        }
+
+        setMsgByteCount();
+        var submitting = false;
+        $form.submit(function (e) {
+            e.preventDefault();
+            if (submitting) {
+                return
+            }
+
+            var message = $message.val();
+            if (maxPostBytes - MemoApp.utf8ByteLength(message) < 0) {
+                MemoApp.AddAlert("Maximum post message is " + maxPostBytes + " bytes. Note that some characters are more than 1 byte." +
+                    " Emojis are usually 4 bytes, for example.");
+                return;
+            }
+
+            if (message.length === 0) {
+                MemoApp.AddAlert("Must enter a message.");
+                return;
+            }
+
+            var address = $form.find("[name=address]").val();
+            if (address.length === 0) {
+                MemoApp.AddAlert("Form error, address not set.");
+                return;
+            }
+
+            var password = MemoApp.GetPassword();
+            if (!password.length) {
+                MemoApp.AddAlert("Password not set. Please re-enter and submit again.");
+                MemoApp.ReEnterPassword(function () {
+                    $form.submit();
+                });
+                return;
+            }
+
+            submitting = true;
+            $.ajax({
+                type: "POST",
+                url: MemoApp.GetBaseUrl() + MemoApp.URL.MemoPrivateMessageSubmit,
+                data: {
+                    message: message,
+                    address: address,
+                    password: password
+                },
+                success: function (txHash) {
+                    submitting = false;
+                    if (!txHash || txHash.length === 0) {
+                        MemoApp.AddAlert("Server error. Please try refreshing the page.");
+                        return
+                    }
+                    window.location = MemoApp.GetBaseUrl() + MemoApp.URL.MemoWait + "/" + txHash
+                },
+                error: function (xhr) {
+                    submitting = false;
+                    if (xhr.status === 401) {
+                        MemoApp.AddAlert("Error unlocking key. " +
+                            "Please verify your password is correct. " +
+                            "If this problem persists, please try refreshing the page.");
+                        MemoApp.ReEnterPassword(function () {
+                            $form.submit();
+                        });
+                        return;
+                    } else if (xhr.status === 402) {
+                        MemoApp.AddAlert("Please make sure your account has enough funds.");
+                        return;
+                    }
+                    var errorMessage =
+                        "Error with request (response code " + xhr.status + "):\n" +
+                        (xhr.responseText !== "" ? xhr.responseText + "\n" : "") +
+                        "If this problem persists, try refreshing the page.";
+                    MemoApp.AddAlert(errorMessage);
+                }
+            });
+        });
+    };
+    /**
+     * @param {jQuery} $form
+     */
     MemoApp.Form.NewMemo = function ($form) {
         var $message = $form.find("[name=message]");
         var $msgByteCount = $form.find(".message-byte-count");

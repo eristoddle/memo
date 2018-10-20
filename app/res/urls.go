@@ -63,6 +63,8 @@ const (
 	UrlMemoFollowSubmit         = "/memo/follow-submit"
 	UrlMemoUnfollow             = "/memo/unfollow"
 	UrlMemoUnfollowSubmit       = "/memo/unfollow-submit"
+	UrlMemoPrivateMessage       = "/memo/private-message"
+	UrlMemoPrivateMessageSubmit = "/memo/private-message-submit"
 	UrlMemoPost                 = "/post"
 	UrlMemoPostThreaded         = "/post-threaded"
 	UrlMemoPostMoreThreadedAjax = "/post-more-threaded-ajax"

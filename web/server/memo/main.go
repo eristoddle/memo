@@ -22,6 +22,8 @@ func GetRoutes() []web.Route {
 		followSubmitRoute,
 		unfollowRoute,
 		unfollowSubmitRoute,
+		privateMessageRoute,
+		privateMessageSubmitRoute,
 		postRoute,
 		postAjaxRoute,
 		postThreadedAjaxRoute,

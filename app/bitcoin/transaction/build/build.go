@@ -1,13 +1,14 @@
 package build
 
 import (
+	"sort"
+
 	"github.com/jchavannes/btcd/wire"
 	"github.com/jchavannes/jgo/jerr"
 	"github.com/memocash/memo/app/bitcoin/memo"
 	"github.com/memocash/memo/app/bitcoin/transaction"
 	"github.com/memocash/memo/app/bitcoin/wallet"
 	"github.com/memocash/memo/app/db"
-	"sort"
 )
 
 const notEnoughValueErrorText = "unable to find enough value to spend"
@@ -129,6 +130,8 @@ func getMemoOutputFee(output memo.Output) (int64, error) {
 		memo.OutputTypeMemoSetName,
 		memo.OutputTypeMemoSetProfile,
 		memo.OutputTypeMemoSetProfilePic,
+		// TODO: May have to change this with chaining
+		memo.OutputTypeMemoPrivateMessage,
 		memo.OutputTypeMemoFollow, memo.OutputTypeMemoUnfollow,
 		memo.OutputTypeMemoTopicFollow, memo.OutputTypeMemoTopicUnfollow:
 		return int64(memo.OutputFeeOpReturn + len(output.Data)), nil

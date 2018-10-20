@@ -1,0 +1,24 @@
+{{ template "snippets/header.html" . }}
+
+<h2>New Private Message to {{ .Profile.Name }}</h2>
+
+<form id="new-memo-form" method="post">
+    <p>
+        <input id="address" type="hidden" name="address" value="{{ .Profile.GetAddressString }}"/>
+    </p>
+    <p>
+        <label for="message">{{ T "private message" }} <span class="message-byte-count byte-count"></span></label>
+        <textarea id="message" type="text" name="message" class="form-control" placeholder="Message" required></textarea>
+    </p>
+    <p>
+        <input class="btn btn-primary" type="submit" value="{{ T "post" }}">
+    </p>
+</form>
+
+<script type="text/javascript">
+    $(function () {
+        MemoApp.Form.PrivateMessage($("#new-memo-form"));
+    });
+</script>
+
+{{ template "snippets/footer.html" . }}
