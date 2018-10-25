@@ -51,22 +51,6 @@ func Create(spendOuts []*db.TransactionOut, privateKey *wallet.PrivateKey, spend
 				return nil, jerr.Get("error creating memo message output", err)
 			}
 			txOuts = append(txOuts, wire.NewTxOut(spendOutput.Amount, pkScript))
-		case memo.OutputTypeMemoPrivateMessage:
-			if len(spendOutput.Data) > memo.MaxPostSize {
-				return nil, jerr.New("message size too large")
-			}
-			if len(spendOutput.Data) == 0 {
-				return nil, jerr.New("empty message")
-			}
-			pkScript, err := txscript.NewScriptBuilder().
-				AddOp(txscript.OP_RETURN).
-				AddData([]byte{memo.CodePrefix, memo.CodePrivateMessage}).
-				AddData(spendOutput.Data).
-				Script()
-			if err != nil {
-				return nil, jerr.Get("error creating memo message output", err)
-			}
-			txOuts = append(txOuts, wire.NewTxOut(spendOutput.Amount, pkScript))
 		case memo.OutputTypeMemoSetName:
 			if len(spendOutput.Data) > memo.MaxPostSize {
 				return nil, jerr.New("name too large")
@@ -279,6 +263,23 @@ func Create(spendOuts []*db.TransactionOut, privateKey *wallet.PrivateKey, spend
 				Script()
 			if err != nil {
 				return nil, jerr.Get("error creating memo poll vote output", err)
+			}
+			txOuts = append(txOuts, wire.NewTxOut(spendOutput.Amount, pkScript))
+		case memo.OutputTypeMemoPrivateMessage:
+			if len(spendOutput.Data)+len(spendOutput.RefData) > memo.MaxPostSize {
+				return nil, jerr.New("message size too large")
+			}
+			if len(spendOutput.Data) == 0 {
+				return nil, jerr.New("empty message")
+			}
+			pkScript, err := txscript.NewScriptBuilder().
+				AddOp(txscript.OP_RETURN).
+				AddData([]byte{memo.CodePrefix, memo.CodePrivateMessage}).
+				AddData(spendOutput.Data).
+				AddData(spendOutput.RefData).
+				Script()
+			if err != nil {
+				return nil, jerr.Get("error creating memo private message output", err)
 			}
 			txOuts = append(txOuts, wire.NewTxOut(spendOutput.Amount, pkScript))
 		case memo.OutputTypeMemoSetProfilePic:

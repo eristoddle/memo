@@ -130,14 +130,13 @@ func getMemoOutputFee(output memo.Output) (int64, error) {
 		memo.OutputTypeMemoSetName,
 		memo.OutputTypeMemoSetProfile,
 		memo.OutputTypeMemoSetProfilePic,
-		// TODO: May have to change this with chaining
-		memo.OutputTypeMemoPrivateMessage,
 		memo.OutputTypeMemoFollow, memo.OutputTypeMemoUnfollow,
 		memo.OutputTypeMemoTopicFollow, memo.OutputTypeMemoTopicUnfollow:
 		return int64(memo.OutputFeeOpReturn + len(output.Data)), nil
 	case memo.OutputTypeMemoReply,
 		memo.OutputTypeMemoTopicMessage,
 		memo.OutputTypeMemoPollOption,
+		memo.OutputTypeMemoPrivateMessage,
 		memo.OutputTypeMemoPollVote:
 		return int64(memo.OutputFeeOpReturn + len(output.Data) + memo.OutputOpDataFee + len(output.RefData)), nil
 	case memo.OutputTypeMemoPollQuestionSingle,

@@ -1,26 +1,28 @@
 package db
 
 import (
+	"time"
+
 	"github.com/jchavannes/btcd/chaincfg/chainhash"
 	"github.com/jchavannes/jgo/jerr"
 	"github.com/memocash/memo/app/bitcoin/wallet"
-	"time"
 )
 
 type FeedEventType int
 
 const (
-	FeedEventPost          FeedEventType = 1
-	FeedEventReply         FeedEventType = 2
-	FeedEventLike          FeedEventType = 3
-	FeedEventTopicPost     FeedEventType = 4
-	FeedEventCreatePoll    FeedEventType = 5
-	FeedEventPollVote      FeedEventType = 6
-	FeedEventSetName       FeedEventType = 7
-	FeedEventSetProfile    FeedEventType = 8
-	FeedEventSetProfilePic FeedEventType = 9
-	FeedEventFollowUser    FeedEventType = 10
-	FeedEventFollowTopic   FeedEventType = 11
+	FeedEventPost           FeedEventType = 1
+	FeedEventReply          FeedEventType = 2
+	FeedEventLike           FeedEventType = 3
+	FeedEventTopicPost      FeedEventType = 4
+	FeedEventCreatePoll     FeedEventType = 5
+	FeedEventPollVote       FeedEventType = 6
+	FeedEventSetName        FeedEventType = 7
+	FeedEventSetProfile     FeedEventType = 8
+	FeedEventSetProfilePic  FeedEventType = 9
+	FeedEventFollowUser     FeedEventType = 10
+	FeedEventFollowTopic    FeedEventType = 11
+	FeedEventPrivateMessage FeedEventType = 12
 )
 
 var PostEvents = []FeedEventType{

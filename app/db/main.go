@@ -3,13 +3,14 @@ package db
 import (
 	"errors"
 	"fmt"
+	"reflect"
+	"strings"
+	"unicode"
+
 	"github.com/jchavannes/gorm"
 	_ "github.com/jchavannes/gorm/dialects/mysql"
 	"github.com/jchavannes/jgo/jerr"
 	"github.com/memocash/memo/app/config"
-	"reflect"
-	"strings"
-	"unicode"
 )
 
 const (
@@ -38,6 +39,7 @@ var dbInterfaces = []interface{}{
 	Peer{},
 	MemoTest{},
 	MemoPost{},
+	MemoPrivateMessage{},
 	MemoSetName{},
 	MemoFollow{},
 	MemoLike{},

@@ -91,7 +91,7 @@ var privateMessageSubmitRoute = web.Route{
 		pkHash := privateKey.GetPublicKey().GetAddress().GetScriptAddress()
 		mutex.Lock(pkHash)
 
-		tx, err := build.PrivateMessage(message, addressString, privateKey)
+		txns, err := build.PrivateMessage(message, addressString, privateKey)
 		if err != nil {
 			var statusCode = http.StatusInternalServerError
 			if build.IsNotEnoughValueError(err) {
@@ -102,8 +102,11 @@ var privateMessageSubmitRoute = web.Route{
 			return
 		}
 
-		transaction.GetTxInfo(tx).Print()
-		// transaction.QueueTx(tx)
-		r.Write(tx.MsgTx.TxHash().String())
+		for _, txn := range txns {
+			transaction.GetTxInfo(txn).Print()
+			transaction.QueueTx(txn)
+		}
+
+		r.Write(txns[len(txns)-1].MsgTx.TxHash().String())
 	},
 }

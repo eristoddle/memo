@@ -15,6 +15,15 @@ func addMemoPostFeedEvent(memoPost *db.MemoPost) {
 	}()
 }
 
+func addMemoPrivateMessageFeedEvent(memoPrivateMessage *db.MemoPrivateMessage) {
+	go func() {
+		err := feed_event.AddPrivateMessage(memoPrivateMessage)
+		if err != nil {
+			jerr.Get("error adding private message feed event", err).Print()
+		}
+	}()
+}
+
 func addMemoSetNameFeedEvent(memoSetName *db.MemoSetName) {
 	go func() {
 		err := feed_event.AddSetName(memoSetName)

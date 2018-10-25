@@ -1,12 +1,13 @@
 package memo
 
 const (
-	MaxPostSize         = 217
-	MaxReplySize        = 184
-	MaxTagMessageSize   = 217
-	MaxPollQuestionSize = 209
-	MaxPollOptionSize   = 184
-	MaxVoteCommentSize  = 184
+	MaxPostSize                = 217
+	MaxReplySize               = 184
+	MaxTagMessageSize          = 217
+	MaxPollQuestionSize        = 209
+	MaxPollOptionSize          = 184
+	MaxVoteCommentSize         = 184
+	MaxPrivateMessageSizeChunk = 184
 )
 
 // https://bitcoin.stackexchange.com/questions/1195/how-to-calculate-transaction-size-before-sending-legacy-non-segwit-p2pkh-p2sh

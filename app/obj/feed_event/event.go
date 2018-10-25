@@ -1,14 +1,15 @@
 package feed_event
 
 import (
+	"net/url"
+	"strings"
+
 	"github.com/memocash/memo/app/bitcoin/wallet"
 	"github.com/memocash/memo/app/db"
 	"github.com/memocash/memo/app/obj/rep"
 	"github.com/memocash/memo/app/profile"
 	"github.com/memocash/memo/app/util"
 	"github.com/memocash/memo/app/util/format"
-	"net/url"
-	"strings"
 )
 
 type Event struct {
@@ -17,6 +18,7 @@ type Event struct {
 	SelfPkHash       []byte
 	ProfilePic       *db.MemoSetPic
 	Post             *profile.Post
+	PrivateMessage   *db.MemoPrivateMessage
 	MemoLike         *db.MemoLike
 	PollOption       *db.MemoPollOption
 	PollVote         *db.MemoPollVote
@@ -99,6 +101,10 @@ func (e *Event) IsPost() bool {
 	return e.FeedEvent.EventType == db.FeedEventPost
 }
 
+func (e *Event) IsPrivateMessage() bool {
+	return e.FeedEvent.EventType == db.FeedEventPrivateMessage
+}
+
 func (e *Event) IsReply() bool {
 	return e.FeedEvent.EventType == db.FeedEventReply
 }
@@ -139,6 +145,8 @@ func (e *Event) GetType() string {
 	switch e.FeedEvent.EventType {
 	case db.FeedEventPost:
 		return "Post"
+	case db.FeedEventPrivateMessage:
+		return "PrivateMessage"
 	case db.FeedEventReply:
 		return "Reply"
 	case db.FeedEventLike:

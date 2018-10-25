@@ -17,6 +17,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 	"time"
 
@@ -24,6 +25,7 @@ import (
 	"github.com/jchavannes/jgo/jerr"
 	"github.com/memocash/memo/app/bitcoin/memo"
 	"github.com/memocash/memo/app/bitcoin/wallet"
+	"github.com/memocash/memo/app/db"
 )
 
 // Transactions : Struct for bch transactions call
@@ -110,6 +112,7 @@ func getPubkey(hash string, address string) (string, error) {
 	return pubkey, nil
 }
 
+// TODO: Replace all of this by querying users transactions, also a boolean on message button
 func harvestKey(address string) (string, error) {
 	var pubkey string
 	var record Transactions
@@ -159,7 +162,24 @@ func removePKCSPadding(src []byte) ([]byte, error) {
 	return src[:length-padLength], nil
 }
 
-// Encrypt : Encrypt message using sender private key and recipient address
+func chunkMessage(message string) []string {
+	log.Print("total private message length: ", len(message))
+	var chunks []string
+	runes := []rune(message)
+	chunkSize := memo.MaxPostSize - 1
+
+	for i := 0; i < len(runes); i += chunkSize {
+		nn := i + chunkSize
+		if nn > len(runes) {
+			nn = len(runes)
+		}
+		chunks = append(chunks, string(runes[i:nn]))
+		chunkSize = memo.MaxPrivateMessageSizeChunk
+	}
+	return chunks
+}
+
+// Encrypt : Encrypt message using sender hex private key and recipient legacy address
 func Encrypt(recipientAddress string, senderPrivate string, in string) (string, error) {
 	hexPubKey, err := harvestKey(recipientAddress)
 	if err != nil {
@@ -221,7 +241,7 @@ func Encrypt(recipientAddress string, senderPrivate string, in string) (string, 
 	return hex.EncodeToString(out), nil
 }
 
-// Decrypt : Decrypt message using sender address and recipient private key
+// Decrypt : Decrypt message using sender legacy address and recipient hex private key
 func Decrypt(senderAddress string, recipientPrivate string, ciphertext string) (string, error) {
 	hexPubKey, err := harvestKey(senderAddress)
 	if err != nil {
@@ -306,42 +326,69 @@ func Decrypt(senderAddress string, recipientPrivate string, ciphertext string) (
 	return string(out), nil
 }
 
-// TODO: Implement message chaining for long messages
-func chunkMessage(s string, chunkSize int) []memo.Output {
-	log.Print("length: ", len(s))
-	var outputs []memo.Output
-	runes := []rune(s)
-
-	for i := 0; i < len(runes); i += chunkSize {
-		nn := i + chunkSize
-		if nn > len(runes) {
-			nn = len(runes)
-		}
-		output := memo.Output{
-			Type: memo.OutputTypeMemoPrivateMessage,
-			Data: []byte(string(runes[i:nn])),
-		}
-		outputs = append(outputs, output)
+// TransactionCount : Get count of transactions to send encrypted message
+func TransactionCount(message string, address string, privateKey *wallet.PrivateKey) (int, error) {
+	hexPk := privateKey.GetHex()
+	privateMessage, err := Encrypt(address, hexPk, message)
+	if err != nil {
+		return 0, jerr.Get("error encrypting private message", err)
 	}
-	return outputs
+	chunkedMessage := chunkMessage(privateMessage)
+	return len(chunkedMessage), nil
 }
 
+// AssembleMessage : Concat outputs from a message transaction and decrypt
 // TODO: Implement message chaining for long messages
-func concatMessage(message string) (string, error) {
+func AssembleMessage(message string) (string, error) {
 	return "", nil
 }
 
 // PrivateMessage : Build private message transaction
-func PrivateMessage(message string, address string, privateKey *wallet.PrivateKey) (*memo.Tx, error) {
+func PrivateMessage(message string, address string, privateKey *wallet.PrivateKey) ([]*memo.Tx, error) {
 	hexPk := privateKey.GetHex()
 	privateMessage, err := Encrypt(address, hexPk, message)
 	if err != nil {
 		return nil, jerr.Get("error encrypting private message", err)
 	}
-	transactions := chunkMessage(privateMessage, memo.MaxPostSize)
-	tx, err := Build(transactions, privateKey)
+
+	spendableTxOuts, err := db.GetSpendableTransactionOutputsForPkHash(privateKey.GetPublicKey().GetAddress().GetScriptAddress())
 	if err != nil {
-		return nil, jerr.Get("error building memo tx", err)
+		return nil, jerr.Get("error getting spendable tx outs", err)
 	}
-	return tx, nil
+	sort.Sort(db.TxOutSortByValue(spendableTxOuts))
+
+	var txns []*memo.Tx
+	chunks := chunkMessage(privateMessage)
+	start := chunks[0]
+	chain := chunks[1:]
+
+	memoTx, spendableTxOuts, err := buildWithTxOuts([]memo.Output{{
+		Type:    memo.OutputTypeMemoPrivateMessage,
+		Data:    []byte(start),
+		RefData: []byte(string(len(chain))),
+	}}, spendableTxOuts, privateKey)
+	if err != nil {
+		return nil, jerr.Get("error creating tx", err)
+	}
+	txns = append(txns, memoTx)
+
+	lastTxHash := memoTx.MsgTx.TxHash()
+	lastTxHashBytes := lastTxHash.CloneBytes()
+
+	for _, chunk := range chain {
+		memoTx, spendableTxOuts, err := buildWithTxOuts([]memo.Output{{
+			Type:    memo.OutputTypeMemoPrivateMessage,
+			Data:    []byte(chunk),
+			RefData: []byte(lastTxHashBytes),
+		}}, spendableTxOuts, privateKey)
+		if err != nil {
+			log.Print("spendableTxOuts: ", spendableTxOuts)
+			return nil, jerr.Get("error creating tx", err)
+		}
+		lastTxHash := memoTx.MsgTx.TxHash()
+		lastTxHashBytes = lastTxHash.CloneBytes()
+		txns = append(txns, memoTx)
+	}
+
+	return txns, nil
 }
