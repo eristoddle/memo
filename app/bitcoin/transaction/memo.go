@@ -3,6 +3,7 @@ package transaction
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
 	"github.com/jchavannes/btcd/txscript"
@@ -19,7 +20,7 @@ import (
 func GetMemoOutputIfExists(txn *db.Transaction) (*db.TransactionOut, error) {
 	var out *db.TransactionOut
 	for _, txOut := range txn.TxOut {
-		if len(txOut.PkScript) < 5 || ! bytes.Equal(txOut.PkScript[0:3], []byte{
+		if len(txOut.PkScript) < 5 || !bytes.Equal(txOut.PkScript[0:3], []byte{
 			txscript.OP_RETURN,
 			txscript.OP_DATA_2,
 			memo.CodePrefix,
@@ -45,7 +46,7 @@ func SaveMemo(txn *db.Transaction, out *db.TransactionOut, block *db.Block) erro
 		parentHash = txn.TxIn[0].PreviousOutPointHash
 	}
 	err, isNew := saveMemoTest(txn, out, block, inputAddress)
-	if err != nil && ! db.IsRecordNotFoundError(err) {
+	if err != nil && !db.IsRecordNotFoundError(err) {
 		return jerr.Get("error saving memo_test", err)
 	}
 	memoCode := out.PkScript[3]
@@ -124,6 +125,11 @@ func SaveMemo(txn *db.Transaction, out *db.TransactionOut, block *db.Block) erro
 		if err != nil {
 			return jerr.Get("error saving memo_set_pic", err)
 		}
+	case memo.CodePrivateMessage:
+		err = saveMemoPrivateMessage(txn, out, block, inputAddress, parentHash)
+		if err != nil {
+			return jerr.Get("error saving memo private message", err)
+		}
 	}
 	if isNew {
 		go func() {
@@ -138,7 +144,7 @@ func SaveMemo(txn *db.Transaction, out *db.TransactionOut, block *db.Block) erro
 
 func saveMemoTest(txn *db.Transaction, out *db.TransactionOut, block *db.Block, inputAddress *btcutil.AddressPubKeyHash) (error, bool) {
 	memoTest, err := db.GetMemoTest(txn.Hash)
-	if err != nil && ! db.IsRecordNotFoundError(err) {
+	if err != nil && !db.IsRecordNotFoundError(err) {
 		return jerr.Get("error getting memo_test", err), false
 	}
 	var blockId uint
@@ -172,7 +178,7 @@ func saveMemoTest(txn *db.Transaction, out *db.TransactionOut, block *db.Block, 
 
 func saveMemoPost(txn *db.Transaction, out *db.TransactionOut, block *db.Block, inputAddress *btcutil.AddressPubKeyHash, parentHash []byte) error {
 	memoPost, err := db.GetMemoPost(txn.Hash)
-	if err != nil && ! db.IsRecordNotFoundError(err) {
+	if err != nil && !db.IsRecordNotFoundError(err) {
 		return jerr.Get("error getting memo_post", err)
 	}
 	var blockId uint
@@ -218,9 +224,76 @@ func saveMemoPost(txn *db.Transaction, out *db.TransactionOut, block *db.Block, 
 	return nil
 }
 
+func saveMemoPrivateMessage(txn *db.Transaction, out *db.TransactionOut, block *db.Block, inputAddress *btcutil.AddressPubKeyHash, parentHash []byte) error {
+	memoPrivateMessage, err := db.GetMemoPrivateMessage(txn.Hash)
+	if err != nil && !db.IsRecordNotFoundError(err) {
+		return jerr.Get("error getting private message", err)
+	}
+	var blockId uint
+	if block != nil {
+		blockId = block.Id
+	}
+	if memoPrivateMessage != nil {
+		if memoPrivateMessage.BlockId != 0 || blockId == 0 {
+			return nil
+		}
+		memoPrivateMessage.BlockId = blockId
+		memoPrivateMessage.Block = block
+		err = memoPrivateMessage.Save()
+		if err != nil {
+			return jerr.Get("error saving private message", err)
+		}
+		addMemoPrivateMessageFeedEvent(memoPrivateMessage)
+		return nil
+	}
+	pushData, err := txscript.PushedData(out.PkScript)
+	if err != nil {
+		return jerr.Get("error parsing push data from private message", err)
+	}
+	if len(pushData) != 3 {
+		return jerr.Newf("invalid private message, incorrect push data (%d)", len(pushData))
+	}
+	var message = string(pushData[2])
+	if len(message) == 0 {
+		return jerr.New("invalid push data for private message, message empty")
+	}
+	var link []byte
+	var count int
+	if len(pushData[2]) > 2 {
+		lastTransactionHashRaw := pushData[2]
+		lastTransactionHash, err := chainhash.NewHash(lastTransactionHashRaw)
+		if err != nil {
+			return jerr.Get("error parsing transaction hash", err)
+		}
+		link = lastTransactionHash.CloneBytes()
+		count = 0
+	} else {
+		link = []byte("")
+		count = int(pushData[2][0])
+	}
+	memoPrivateMessage = &db.MemoPrivateMessage{
+		TxHash:     txn.Hash,
+		PkHash:     inputAddress.ScriptAddress(),
+		PkScript:   out.PkScript,
+		ParentHash: parentHash,
+		Address:    inputAddress.EncodeAddress(),
+		Message:    message,
+		Count:      count,
+		Link:       link,
+		BlockId:    blockId,
+		Block:      block,
+	}
+	err = memoPrivateMessage.Save()
+	if err != nil {
+		return jerr.Get("error saving memo private message", err)
+	}
+	addMemoPrivateMessageFeedEvent(memoPrivateMessage)
+	return nil
+}
+
 func saveMemoSetName(txn *db.Transaction, out *db.TransactionOut, block *db.Block, inputAddress *btcutil.AddressPubKeyHash, parentHash []byte) error {
 	memoSetName, err := db.GetMemoSetName(txn.Hash)
-	if err != nil && ! db.IsRecordNotFoundError(err) {
+	if err != nil && !db.IsRecordNotFoundError(err) {
 		return jerr.Get("error getting memo_set_name", err)
 	}
 	var blockId uint
@@ -268,7 +341,7 @@ func saveMemoSetName(txn *db.Transaction, out *db.TransactionOut, block *db.Bloc
 
 func saveMemoSetPic(txn *db.Transaction, out *db.TransactionOut, block *db.Block, inputAddress *btcutil.AddressPubKeyHash, parentHash []byte) error {
 	memoSetPic, err := db.GetMemoSetPic(txn.Hash)
-	if err != nil && ! db.IsRecordNotFoundError(err) {
+	if err != nil && !db.IsRecordNotFoundError(err) {
 		return jerr.Get("error getting memo_set_pic", err)
 	}
 	var blockId uint
@@ -328,7 +401,7 @@ func saveMemoSetPic(txn *db.Transaction, out *db.TransactionOut, block *db.Block
 
 func saveMemoFollow(txn *db.Transaction, out *db.TransactionOut, block *db.Block, inputAddress *btcutil.AddressPubKeyHash, parentHash []byte, unfollow bool) error {
 	memoFollow, err := db.GetMemoFollow(txn.Hash)
-	if err != nil && ! db.IsRecordNotFoundError(err) {
+	if err != nil && !db.IsRecordNotFoundError(err) {
 		return jerr.Get("error getting memo_follow", err)
 	}
 	var blockId uint
@@ -349,7 +422,7 @@ func saveMemoFollow(txn *db.Transaction, out *db.TransactionOut, block *db.Block
 		return nil
 	}
 	address := wallet.GetAddressFromPkHash(out.PkScript[5:])
-	if ! bytes.Equal(address.GetScriptAddress(), out.PkScript[5:]) {
+	if !bytes.Equal(address.GetScriptAddress(), out.PkScript[5:]) {
 		return jerr.New("unable to parse follow address")
 	}
 	memoFollow = &db.MemoFollow{
@@ -368,7 +441,7 @@ func saveMemoFollow(txn *db.Transaction, out *db.TransactionOut, block *db.Block
 		return jerr.Get("error saving memo_follow", err)
 	}
 	err = cache.ClearReputation(memoFollow.PkHash, memoFollow.FollowPkHash)
-	if err != nil && ! cache.IsMissError(err) {
+	if err != nil && !cache.IsMissError(err) {
 		return jerr.Get("error clearing cache", err)
 	}
 	if !unfollow {
@@ -380,7 +453,7 @@ func saveMemoFollow(txn *db.Transaction, out *db.TransactionOut, block *db.Block
 
 func saveMemoLike(txn *db.Transaction, out *db.TransactionOut, block *db.Block, inputAddress *btcutil.AddressPubKeyHash, parentHash []byte) error {
 	memoLike, err := db.GetMemoLike(txn.Hash)
-	if err != nil && ! db.IsRecordNotFoundError(err) {
+	if err != nil && !db.IsRecordNotFoundError(err) {
 		return jerr.Get("error getting memo_like", err)
 	}
 	var blockId uint
@@ -440,7 +513,7 @@ func saveMemoLike(txn *db.Transaction, out *db.TransactionOut, block *db.Block, 
 
 func saveMemoReply(txn *db.Transaction, out *db.TransactionOut, block *db.Block, inputAddress *btcutil.AddressPubKeyHash, parentHash []byte) error {
 	memoPost, err := db.GetMemoPost(txn.Hash)
-	if err != nil && ! db.IsRecordNotFoundError(err) {
+	if err != nil && !db.IsRecordNotFoundError(err) {
 		return jerr.Get("error getting memo_reply", err)
 	}
 	var blockId uint
@@ -500,7 +573,7 @@ func saveMemoReply(txn *db.Transaction, out *db.TransactionOut, block *db.Block,
 
 func saveMemoTopicMessage(txn *db.Transaction, out *db.TransactionOut, block *db.Block, inputAddress *btcutil.AddressPubKeyHash, parentHash []byte) error {
 	memoPost, err := db.GetMemoPost(txn.Hash)
-	if err != nil && ! db.IsRecordNotFoundError(err) {
+	if err != nil && !db.IsRecordNotFoundError(err) {
 		return jerr.Get("error getting memo topic message", err)
 	}
 	var blockId uint
@@ -557,7 +630,7 @@ func saveMemoTopicMessage(txn *db.Transaction, out *db.TransactionOut, block *db
 
 func saveMemoTopicFollow(unfollow bool, txn *db.Transaction, out *db.TransactionOut, block *db.Block, inputAddress *btcutil.AddressPubKeyHash, parentHash []byte) error {
 	memoFollowTopic, err := db.GetMemoTopicFollow(txn.Hash)
-	if err != nil && ! db.IsRecordNotFoundError(err) {
+	if err != nil && !db.IsRecordNotFoundError(err) {
 		return jerr.Get("error getting memo follow topic", err)
 	}
 	var blockId uint
@@ -611,7 +684,7 @@ func saveMemoTopicFollow(unfollow bool, txn *db.Transaction, out *db.Transaction
 
 func saveMemoSetProfile(txn *db.Transaction, out *db.TransactionOut, block *db.Block, inputAddress *btcutil.AddressPubKeyHash, parentHash []byte) error {
 	memoSetProfile, err := db.GetMemoSetProfile(txn.Hash)
-	if err != nil && ! db.IsRecordNotFoundError(err) {
+	if err != nil && !db.IsRecordNotFoundError(err) {
 		return jerr.Get("error getting memo_set_profile", err)
 	}
 	var blockId uint
@@ -659,7 +732,7 @@ func saveMemoSetProfile(txn *db.Transaction, out *db.TransactionOut, block *db.B
 
 func saveMemoPollQuestion(txn *db.Transaction, out *db.TransactionOut, block *db.Block, inputAddress *btcutil.AddressPubKeyHash, parentHash []byte) error {
 	memoPost, err := db.GetMemoPost(txn.Hash)
-	if err != nil && ! db.IsRecordNotFoundError(err) {
+	if err != nil && !db.IsRecordNotFoundError(err) {
 		return jerr.Get("error getting memo_post", err)
 	}
 	var blockId uint
@@ -729,7 +802,7 @@ func saveMemoPollQuestion(txn *db.Transaction, out *db.TransactionOut, block *db
 
 func saveMemoPollOption(txn *db.Transaction, out *db.TransactionOut, block *db.Block, inputAddress *btcutil.AddressPubKeyHash, parentHash []byte) error {
 	memoPollOption, err := db.GetMemoPollOption(txn.Hash)
-	if err != nil && ! db.IsRecordNotFoundError(err) {
+	if err != nil && !db.IsRecordNotFoundError(err) {
 		return jerr.Get("error getting memo_poll_option", err)
 	}
 	var blockId uint
@@ -786,7 +859,7 @@ func saveMemoPollOption(txn *db.Transaction, out *db.TransactionOut, block *db.B
 
 func saveMemoPollVote(txn *db.Transaction, out *db.TransactionOut, block *db.Block, inputAddress *btcutil.AddressPubKeyHash, parentHash []byte) error {
 	memoPollVote, err := db.GetMemoPollVote(txn.Hash)
-	if err != nil && ! db.IsRecordNotFoundError(err) {
+	if err != nil && !db.IsRecordNotFoundError(err) {
 		return jerr.Get("error getting memo_poll_vote", err)
 	}
 	var blockId uint
@@ -859,7 +932,7 @@ func saveMemoPollVote(txn *db.Transaction, out *db.TransactionOut, block *db.Blo
 
 func saveMemoVotePost(txn *db.Transaction, out *db.TransactionOut, block *db.Block, inputAddress *btcutil.AddressPubKeyHash, parentHash []byte) error {
 	memoPost, err := db.GetMemoPost(txn.Hash)
-	if err != nil && ! db.IsRecordNotFoundError(err) {
+	if err != nil && !db.IsRecordNotFoundError(err) {
 		return jerr.Get("error getting memo_post for poll vote", err)
 	}
 	var blockId uint
@@ -917,7 +990,7 @@ func getInputPkHash(txn *db.Transaction) (*btcutil.AddressPubKeyHash, error) {
 	for _, in := range txn.TxIn {
 		tmpPkHash := in.GetAddress().GetScriptAddress()
 		if len(tmpPkHash) > 0 {
-			if len(pkHash) != 0 && ! bytes.Equal(tmpPkHash, pkHash) {
+			if len(pkHash) != 0 && !bytes.Equal(tmpPkHash, pkHash) {
 				return nil, jerr.New("error found multiple addresses in inputs")
 			}
 			pkHash = tmpPkHash
