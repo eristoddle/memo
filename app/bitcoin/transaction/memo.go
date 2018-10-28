@@ -253,7 +253,7 @@ func saveMemoPrivateMessage(txn *db.Transaction, out *db.TransactionOut, block *
 	if len(pushData) != 3 {
 		return jerr.Newf("invalid private message, incorrect push data (%d)", len(pushData))
 	}
-	var message = string(pushData[2])
+	var message = string(pushData[1])
 	if len(message) == 0 {
 		return jerr.New("invalid push data for private message, message empty")
 	}
