@@ -12,24 +12,25 @@ import (
 )
 
 type MemoPrivateMessage struct {
-	Id         uint   `gorm:"primary_key"`
-	TxHash     []byte `gorm:"unique;size:50"`
-	ParentHash []byte
-	PkHash     []byte `gorm:"index:pk_hash"`
-	PkScript   []byte `gorm:"size:500"`
-	Address    string
-	// Generic Above
-	ParentTxHash []byte `gorm:"index:parent_tx_hash"`
-	Parent       *MemoPrivateMessage
-	RootTxHash   []byte `gorm:"index:root_tx_hash"`
-	Message      string `gorm:"size:500"`
-	Count        int    `gorm:"count"`
-	Link         []byte `gorm:"index:last_tx_hash"`
-	// Generic Below
-	BlockId   uint
-	Block     *Block
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Id              uint   `gorm:"primary_key"`
+	TxHash          []byte `gorm:"unique;size:50"`
+	ParentHash      []byte
+	PkHash          []byte `gorm:"index:pk_hash"`
+	PkScript        []byte `gorm:"size:500"`
+	Address         string
+	RootTxHash      []byte `gorm:"index:root_tx_hash"`
+	Message         string `gorm:"size:500"`
+	Count           int    `gorm:"count"`
+	Link            []byte `gorm:"index:last_tx_hash"`
+	BlockId         uint
+	Block           *Block
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	CompleteMessage string `gorm:"-"`
+}
+
+type Count struct {
+	Max int
 }
 
 func (m *MemoPrivateMessage) Save() error {
@@ -49,14 +50,14 @@ func (m MemoPrivateMessage) GetTransactionHashString() string {
 	return hash.String()
 }
 
-func (m MemoPrivateMessage) GetParentTransactionHashString() string {
-	hash, err := chainhash.NewHash(m.ParentTxHash)
-	if err != nil {
-		jerr.Get("error getting chainhash from memo private message", err).Print()
-		return ""
-	}
-	return hash.String()
-}
+// func (m MemoPrivateMessage) GetParentTransactionHashString() string {
+// 	hash, err := chainhash.NewHash(m.ParentTxHash)
+// 	if err != nil {
+// 		jerr.Get("error getting chainhash from memo private message", err).Print()
+// 		return ""
+// 	}
+// 	return hash.String()
+// }
 
 func (m MemoPrivateMessage) GetRootTransactionHashString() string {
 	hash, err := chainhash.NewHash(m.RootTxHash)
@@ -157,41 +158,59 @@ func GetPrivateMessagesForPkHash(pkHash []byte, offset uint) ([]*MemoPrivateMess
 	return memoPrivateMessages, nil
 }
 
-func GetRecentPrivateMessages(offset uint, searchString string) ([]*MemoPrivateMessage, error) {
-	db, err := getDb()
-	if err != nil {
-		return nil, jerr.Get("error getting db", err)
-	}
-	db = db.Preload(BlockTable)
-	if searchString != "" {
-		db = db.Where("message LIKE ?", fmt.Sprintf("%%%s%%", searchString))
-	}
-	var memoPrivateMessages []*MemoPrivateMessage
-	result := db.
-		Limit(25).
-		Offset(offset).
-		Order("id DESC").
-		Find(&memoPrivateMessages)
-	if result.Error != nil {
-		return nil, jerr.Get("error running query", result.Error)
-	}
-	return memoPrivateMessages, nil
-}
-
 func GetPrivateMessages(offset uint) ([]*MemoPrivateMessage, error) {
+	limit := 25
 	db, err := getDb()
 	if err != nil {
 		return nil, jerr.Get("error getting db", err)
 	}
-	var memoPrivateMessages []*MemoPrivateMessage
-	result := db.
-		Preload(BlockTable).
-		Limit(25).
+
+	// Counts > 0 are the first chunk of the message
+	// count value = remaining chunks
+	// Get max count value of last limit records
+	// To determine amount of self-joins
+	var count Count
+	countQuery := db.
+		Table("memo_private_messages").
+		Select("MAX(count) AS max").
+		Where("count > 0").
 		Offset(offset).
-		Order("id ASC").
-		Find(&memoPrivateMessages)
-	if result.Error != nil {
-		return nil, jerr.Get("error running query", result.Error)
+		Limit(limit).
+		Order("id DESC").
+		Find(&count)
+	if countQuery.Error != nil {
+		return nil, jerr.Get("error running query", countQuery.Error)
 	}
+
+	var memoPrivateMessages []*MemoPrivateMessage
+	query := db.Table("memo_private_messages m")
+	selects := "m.*"
+	var joins []string
+	for i := 0; i < count.Max; i++ {
+		var join string
+		if i == 0 {
+			selects = "m.*, CONCAT(m.message, m0.message"
+			join = fmt.Sprintf("LEFT JOIN memo_private_messages m%d ON m.tx_hash = m%d.link", i, i)
+		} else {
+			selects = fmt.Sprintf("%s, m%d.message", selects, i)
+			join = fmt.Sprintf("LEFT JOIN memo_private_messages m%d ON m%d.tx_hash = m%d.link", i, i-1, i)
+		}
+		joins = append(joins, join)
+	}
+
+	selects = fmt.Sprintf("%s) complete_message", selects)
+	query = query.Select(selects)
+
+	for _, join := range joins {
+		query = query.Joins(join)
+	}
+
+	query = query.
+		Where("m.count > 0").
+		Offset(offset).
+		Limit(limit).
+		Order("m.id DESC").
+		Find(&memoPrivateMessages)
+
 	return memoPrivateMessages, nil
 }

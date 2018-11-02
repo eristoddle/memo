@@ -156,6 +156,10 @@ const (
 	TmplSnippetsPostThreadedLoadMore = "/post/snippets/post-threaded-load-more"
 )
 
+const (
+	UrlMessages = "/messages"
+)
+
 func GetBaseUrl(r *web.Response) string {
 	baseUrl := r.Request.GetHeader("AppPath")
 	if baseUrl == "" {

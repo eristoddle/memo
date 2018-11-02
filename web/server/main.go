@@ -1,6 +1,14 @@
 package server
 
 import (
+	"io/ioutil"
+	"log"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+	"unicode"
+
 	"github.com/jchavannes/jgo/jerr"
 	"github.com/jchavannes/jgo/web"
 	"github.com/memocash/memo/app/auth"
@@ -14,22 +22,16 @@ import (
 	"github.com/memocash/memo/web/server/index"
 	"github.com/memocash/memo/web/server/key"
 	"github.com/memocash/memo/web/server/memo"
+	"github.com/memocash/memo/web/server/messages"
 	"github.com/memocash/memo/web/server/poll"
 	"github.com/memocash/memo/web/server/posts"
 	"github.com/memocash/memo/web/server/profile"
 	"github.com/memocash/memo/web/server/topics"
 	"github.com/nicksnyder/go-i18n/i18n"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"strconv"
-	"strings"
-	"unicode"
-	"time"
 )
 
 func isLoggedIn(r *web.Response) bool {
-	if ! auth.IsLoggedIn(r.Session.CookieId) {
+	if !auth.IsLoggedIn(r.Session.CookieId) {
 		r.SetRedirect(res.UrlLogin)
 		return false
 	}
@@ -112,7 +114,7 @@ func preHandler(r *web.Response) {
 	if lang == "" {
 		lang = r.Request.GetHeader("Accept-Language")
 	}
-	if ! res.IsValidLang(lang) {
+	if !res.IsValidLang(lang) {
 		lang = "en-US"
 	}
 	r.Helper["Lang"] = lang
@@ -222,6 +224,7 @@ func Run(sessionCookieInsecure bool, port int) {
 			auth2.GetRoutes(),
 			memo.GetRoutes(),
 			profile.GetRoutes(),
+			messages.GetRoutes(),
 		),
 		StaticFilesDir: "web/public",
 		TemplatesDir:   "web/templates",

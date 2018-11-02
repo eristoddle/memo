@@ -179,8 +179,8 @@ func chunkMessage(message string) []string {
 	return chunks
 }
 
-// Encrypt : Encrypt message using sender hex private key and recipient legacy address
-func Encrypt(recipientAddress string, senderPrivate string, in string) (string, error) {
+// EncryptPM : Encrypt message using sender hex private key and recipient legacy address
+func EncryptPM(recipientAddress string, senderPrivate string, in string) (string, error) {
 	hexPubKey, err := harvestKey(recipientAddress)
 	if err != nil {
 		return "", err
@@ -241,8 +241,8 @@ func Encrypt(recipientAddress string, senderPrivate string, in string) (string, 
 	return hex.EncodeToString(out), nil
 }
 
-// Decrypt : Decrypt message using sender legacy address and recipient hex private key
-func Decrypt(senderAddress string, recipientPrivate string, ciphertext string) (string, error) {
+// DecryptPM : Decrypt message using sender legacy address and recipient hex private key
+func DecryptPM(senderAddress string, recipientPrivate string, ciphertext string) (string, error) {
 	hexPubKey, err := harvestKey(senderAddress)
 	if err != nil {
 		return "", err
@@ -329,7 +329,7 @@ func Decrypt(senderAddress string, recipientPrivate string, ciphertext string) (
 // TransactionCount : Get count of transactions to send encrypted message
 func TransactionCount(message string, address string, privateKey *wallet.PrivateKey) (int, error) {
 	hexPk := privateKey.GetHex()
-	privateMessage, err := Encrypt(address, hexPk, message)
+	privateMessage, err := EncryptPM(address, hexPk, message)
 	if err != nil {
 		return 0, jerr.Get("error encrypting private message", err)
 	}
@@ -346,7 +346,7 @@ func AssembleMessage(message string) (string, error) {
 // PrivateMessage : Build private message transaction
 func PrivateMessage(message string, address string, privateKey *wallet.PrivateKey) ([]*memo.Tx, error) {
 	hexPk := privateKey.GetHex()
-	privateMessage, err := Encrypt(address, hexPk, message)
+	privateMessage, err := EncryptPM(address, hexPk, message)
 	if err != nil {
 		return nil, jerr.Get("error encrypting private message", err)
 	}
