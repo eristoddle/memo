@@ -1068,4 +1068,18 @@
             });
         });
     };
+
+    /**
+     * @param {jQuery} @param {jQuery} $link
+     */
+    MemoApp.Form.PrivateMessageLink = function ($link) {
+        $link.click(function (e) {
+            e.preventDefault();
+            var $form = $('<form action="' + MemoApp.URL.MemoPrivateMessages + '" method="post">' +
+                '<input type="hidden" name="password" value="' + MemoApp.GetPassword() + '">' +
+                '</form>');
+            $('body').append($form);
+            $form.submit();
+        });
+    };
 })();

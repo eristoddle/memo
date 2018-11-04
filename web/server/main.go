@@ -22,7 +22,6 @@ import (
 	"github.com/memocash/memo/web/server/index"
 	"github.com/memocash/memo/web/server/key"
 	"github.com/memocash/memo/web/server/memo"
-	"github.com/memocash/memo/web/server/messages"
 	"github.com/memocash/memo/web/server/poll"
 	"github.com/memocash/memo/web/server/posts"
 	"github.com/memocash/memo/web/server/profile"
@@ -224,7 +223,6 @@ func Run(sessionCookieInsecure bool, port int) {
 			auth2.GetRoutes(),
 			memo.GetRoutes(),
 			profile.GetRoutes(),
-			messages.GetRoutes(),
 		),
 		StaticFilesDir: "web/public",
 		TemplatesDir:   "web/templates",

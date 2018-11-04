@@ -243,8 +243,6 @@ func saveMemoPrivateMessage(txn *db.Transaction, out *db.TransactionOut, block *
 		if err != nil {
 			return jerr.Get("error saving private message", err)
 		}
-		// TODO: Fix frontend for this, so user can see sent messages
-		// addMemoPrivateMessageFeedEvent(memoPrivateMessage)
 		return nil
 	}
 	pushData, err := txscript.PushedData(out.PkScript)
@@ -288,7 +286,6 @@ func saveMemoPrivateMessage(txn *db.Transaction, out *db.TransactionOut, block *
 	if err != nil {
 		return jerr.Get("error saving memo private message", err)
 	}
-	// TODO: Fix frontend for this, so user can see sent messages
 	// addMemoPrivateMessageFeedEvent(memoPrivateMessage)
 	return nil
 }

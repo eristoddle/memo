@@ -1,0 +1,16 @@
+{{ $tz := .TimeZone }}
+{{ $settings := .UserSettings }}
+
+{{ template "snippets/header.html" . }}
+
+{{ template "posts/snippets/header.html" dict "Page" "ranked" "IsLoggedIn" .IsLoggedIn }}
+
+{{ template "snippets/pagination.html" dict "OffsetLink" .OffsetLink "NextOffset" .NextOffset "PrevOffset" .PrevOffset "Page" .Page "Items" .Posts }}
+
+{{ range .Posts }}
+{{ template "post/message.html" dict "Post" . "Compress" false "TimeZone" $tz "UserSettings" $settings }}
+{{ end }}
+
+{{ template "snippets/pagination.html" dict "OffsetLink" .OffsetLink "NextOffset" .NextOffset "PrevOffset" .PrevOffset "Page" .Page "Items" .Posts }}
+
+{{ template "snippets/footer.html" . }}

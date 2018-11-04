@@ -76,9 +76,6 @@
                 <li {{ if eq $nav "topics" }}class="active"{{ end }}><a href="topics">{{ T "Topics" }}</a></li>
                 <li {{ if eq $nav "profiles" }}class="active"{{ end }}><a
                         href="profiles/most-actions">{{ T "profiles" }}</a></li>
-            {{ if .Username }}
-                <li {{ if eq $nav "messages" }}class="active"{{ end }}><a href="messages">{{ T "Private Messages" }}</a></li>
-            {{ end }}
             {{ if not .Username }}
                 <li {{ if eq $nav "signup" }}class="active"{{ end }}><a href="signup">{{ T "Signup" }}</a></li>
                 <li {{ if eq $nav "login" }}class="active"{{ end }}><a href="login">{{ T "Login" }}</a></li>

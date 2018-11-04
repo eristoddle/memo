@@ -5,5 +5,12 @@
     <a {{ if eq $page "threads" }}class="sel"{{ end }} href="posts/threads">{{ T "Threads" }}</a>
     <a {{ if eq $page "top" }}class="sel"{{ end }} href="posts/top">{{ T "Top" }}</a>
     <a {{ if eq $page "new" }}class="sel"{{ end }} href="posts/new">{{ T "new" | Title }}</a>
+    <a {{ if eq $page "messages" }}class="sel"{{ end }} class="private-message-form" href="posts/messages">{{ T "messages" | Title }}</a>
     <a {{ if eq $page "archive" }}class="sel"{{ end }} href="posts/archive">{{ T "archive" }}</a>
 </p>
+
+<script type="text/javascript">
+    $(function () {
+        MemoApp.Form.PrivateMessageLink($(".private-message-form"));
+    });
+</script>

@@ -29,11 +29,14 @@
                 <p>
                 {{ .Profile.GetText }}
                 </p>
-             {{ if not .Profile.IsSelf }}
-                <span>
-                    <a class="btn btn-sm btn-primary"
-                    href="memo/private-message/{{ .Profile.GetAddressString }}">{{ T "message" 1 }}</a>
-                </span>
+            {{ $isLoggedIn := .IsLoggedIn }}
+            {{ if $isLoggedIn }}
+                {{ if not .Profile.IsSelf }}
+                    <span>
+                        <a class="btn btn-sm btn-primary"
+                        href="memo/private-message/{{ .Profile.GetAddressString }}">{{ T "message" 1 }}</a>
+                    </span>
+                {{ end }}
             {{ end }}
             {{ if .Profile.CanFollow }}
                 <span>

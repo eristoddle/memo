@@ -1,9 +1,0 @@
-{{ template "snippets/pagination.html" dict "OffsetLink" .OffsetLink "NextOffset" .NextOffset "PrevOffset" .PrevOffset "Page" .Page "Items" .MessageItems }}
-
-{{ $tz := .TimeZone }}
-{{ $settings := .UserSettings }}
-{{ range .MessageItems }}
-{{ template "messages/item.html" dict "Item" . "TimeZone" $tz "UserSettings" $settings }}
-{{ end }}
-
-{{ template "snippets/pagination.html" dict "OffsetLink" .OffsetLink "NextOffset" .NextOffset "PrevOffset" .PrevOffset "Page" .Page "Items" .MessageItems }}

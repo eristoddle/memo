@@ -119,6 +119,7 @@ const (
 	UrlPostsPolls        = "/polls"
 	UrlPostsArchive      = "/posts/archive"
 	UrlPostsPersonalized = "/posts/personalized"
+	UrlPostsMessages     = "/posts/messages"
 
 	TmplPostsPolls = "/posts/polls"
 )
@@ -154,10 +155,6 @@ const (
 	TmplSnippetsPost                 = "/post/post"
 	TmplSnippetsPostThreaded         = "/post/post-threaded"
 	TmplSnippetsPostThreadedLoadMore = "/post/snippets/post-threaded-load-more"
-)
-
-const (
-	UrlMessages = "/messages"
 )
 
 func GetBaseUrl(r *web.Response) string {

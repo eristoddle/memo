@@ -217,5 +217,6 @@ var MemoApp = {
         TopicsCreateSubmit: "topics/create-submit",
         MemoSetProfilePicSubmit: "memo/set-profile-pic-submit",
         MemoPrivateMessageSubmit: "memo/private-message-submit",
+        MemoPrivateMessages: "posts/messages",
     };
 })();

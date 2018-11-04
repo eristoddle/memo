@@ -50,15 +50,6 @@ func (m MemoPrivateMessage) GetTransactionHashString() string {
 	return hash.String()
 }
 
-// func (m MemoPrivateMessage) GetParentTransactionHashString() string {
-// 	hash, err := chainhash.NewHash(m.ParentTxHash)
-// 	if err != nil {
-// 		jerr.Get("error getting chainhash from memo private message", err).Print()
-// 		return ""
-// 	}
-// 	return hash.String()
-// }
-
 func (m MemoPrivateMessage) GetRootTransactionHashString() string {
 	hash, err := chainhash.NewHash(m.RootTxHash)
 	if err != nil {
@@ -95,6 +86,7 @@ func (m MemoPrivateMessage) GetTimeString() string {
 	return "Unconfirmed"
 }
 
+// TODO: Rewrite the rest of the these functions so they work or remove if not needed
 func GetMemoPrivateMessage(txHash []byte) (*MemoPrivateMessage, error) {
 	var memoPrivateMessage MemoPrivateMessage
 	err := findPreloadColumns([]string{
@@ -181,7 +173,8 @@ func GetPrivateMessages(offset uint) ([]*MemoPrivateMessage, error) {
 	if countQuery.Error != nil {
 		return nil, jerr.Get("error running query", countQuery.Error)
 	}
-
+	// TODO: This query breaks all results if the count is higher than the chunks in the db
+	// And may break with different count values in the results
 	var memoPrivateMessages []*MemoPrivateMessage
 	query := db.Table("memo_private_messages m")
 	selects := "m.*"
