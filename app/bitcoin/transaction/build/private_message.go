@@ -25,17 +25,12 @@ func chunkMessage(runes []rune) []string {
 }
 
 // PrivateMessage : Build private message transaction
-func PrivateMessage(message string, address string, privateKey *wallet.PrivateKey) ([]*memo.Tx, error) {
+func PrivateMessage(message string, privateKey *wallet.PrivateKey, pubKey string) ([]*memo.Tx, error) {
 	hexPk := privateKey.GetHex()
-	privateMessage, err := util.EncryptPM(address, hexPk, message)
-	if err != nil {
-		return nil, jerr.Get("error encrypting private message", err)
-	}
+	privateMessage, err := util.EncryptPM(pubKey, hexPk, message)
 
 	// TODO: Remove logs
 	log.Print("original: ", message)
-	log.Print("recipient address: ", address)
-	log.Print("sender private key: ", hexPk)
 	log.Print("encrypted: ", privateMessage)
 
 	runes := []rune(privateMessage)

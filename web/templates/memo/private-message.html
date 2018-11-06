@@ -5,6 +5,7 @@
 <form id="new-memo-form" method="post">
     <p>
         <input id="address" type="hidden" name="address" value="{{ .Profile.GetAddressString }}"/>
+        <input id="pubkey" type="hidden" name="pubkey" value="{{ .Profile.GetPublicKey }}"/>
     </p>
     <p>
         <label for="message">{{ T "private message" }} <span class="message-byte-count byte-count"></span></label>

@@ -86,7 +86,6 @@ func (m MemoPrivateMessage) GetTimeString() string {
 	return "Unconfirmed"
 }
 
-// TODO: Rewrite the rest of the these functions so they work or remove if not needed
 func GetMemoPrivateMessage(txHash []byte) (*MemoPrivateMessage, error) {
 	var memoPrivateMessage MemoPrivateMessage
 	err := findPreloadColumns([]string{

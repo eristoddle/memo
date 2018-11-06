@@ -13,6 +13,7 @@ import (
 type Message struct {
 	Content    string
 	SelfPkHash []byte
+	PublicKey  []byte
 	Memo       *db.MemoPrivateMessage
 	Error      error
 	Name       string
@@ -57,6 +58,10 @@ func GetPrivateMessages(recipientPrivate string, selfPkHash []byte, offset uint)
 	if err != nil {
 		return nil, jerr.Get("error attaching profile pics to posts", err)
 	}
+	err = AttachPublicKeyToMessages(messages)
+	if err != nil {
+		return nil, jerr.Get("error attaching profile pics to posts", err)
+	}
 	return messages, nil
 }
 
@@ -66,7 +71,7 @@ func CreateMessagesFromDbMessages(recipientPrivate string, selfPkHash []byte, db
 		var decrypted *Message
 		if len(recipientPrivate) > 0 {
 			// TODO: Run this concurrently, after switching from api to db pub key results, throttling
-			text, err := util.DecryptPM(message.Address, recipientPrivate, message.CompleteMessage)
+			text, err := util.DecryptPMWithAddress(message.Address, recipientPrivate, message.CompleteMessage)
 			if err != nil {
 				decrypted = &Message{
 					Content:    message.CompleteMessage,
@@ -137,6 +142,30 @@ func AttachProfilePicsToMessages(messages []*Message) error {
 		for _, message := range messages {
 			if bytes.Equal(message.Memo.PkHash, setPic.PkHash) {
 				message.ProfilePic = setPic
+			}
+		}
+	}
+	return nil
+}
+
+func AttachPublicKeyToMessages(messages []*Message) error {
+	var namePkHashes [][]byte
+	for _, message := range messages {
+		for _, namePkHash := range namePkHashes {
+			if bytes.Equal(namePkHash, message.Memo.PkHash) {
+				continue
+			}
+		}
+		namePkHashes = append(namePkHashes, message.Memo.PkHash)
+	}
+	keys, err := db.GetKeysForPkHashes(namePkHashes)
+	if err != nil {
+		return jerr.Get("error getting public keys for pk hashes", err)
+	}
+	for _, key := range keys {
+		for _, message := range messages {
+			if bytes.Equal(message.Memo.PkHash, key.PkHash) {
+				message.PublicKey = key.PublicKey
 			}
 		}
 	}

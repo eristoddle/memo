@@ -161,13 +161,16 @@ func removePKCSPadding(src []byte) ([]byte, error) {
 	return src[:length-padLength], nil
 }
 
-// EncryptPM : Encrypt message using sender hex private key and recipient legacy address
-func EncryptPM(recipientAddress string, senderPrivate string, in string) (string, error) {
+func EncryptPMWithAddress(recipientAddress string, senderPrivate string, in string) (string, error) {
 	hexPubKey, err := harvestKey(recipientAddress)
 	if err != nil {
 		return "", err
 	}
+	return EncryptPM(hexPubKey, senderPrivate, in)
+}
 
+// EncryptPM : Encrypt message using sender hex private key and recipient legacy address
+func EncryptPM(hexPubKey string, senderPrivate string, in string) (string, error) {
 	privateBytes, err := hex.DecodeString(senderPrivate)
 	if err != nil {
 		return "", err
@@ -223,13 +226,16 @@ func EncryptPM(recipientAddress string, senderPrivate string, in string) (string
 	return hex.EncodeToString(out), nil
 }
 
-// DecryptPM : Decrypt message using sender legacy address and recipient hex private key
-func DecryptPM(senderAddress string, recipientPrivate string, ciphertext string) (string, error) {
+func DecryptPMWithAddress(senderAddress string, recipientPrivate string, in string) (string, error) {
 	hexPubKey, err := harvestKey(senderAddress)
 	if err != nil {
 		return "", err
 	}
+	return EncryptPM(hexPubKey, recipientPrivate, in)
+}
 
+// DecryptPM : Decrypt message using sender legacy address and recipient hex private key
+func DecryptPM(hexPubKey string, recipientPrivate string, ciphertext string) (string, error) {
 	privateBytes, err := hex.DecodeString(recipientPrivate)
 	if err != nil {
 		return "", err

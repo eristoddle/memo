@@ -3,7 +3,11 @@ package profile
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
 	"github.com/jchavannes/bchutil"
@@ -15,8 +19,6 @@ import (
 	"github.com/memocash/memo/app/util"
 	"github.com/memocash/memo/app/util/format"
 	"github.com/skip2/go-qrcode"
-	"strings"
-	"time"
 )
 
 type Profile struct {
@@ -197,6 +199,15 @@ func (p Profile) GetText() string {
 	return profile
 }
 
+func (p Profile) GetPublicKey() (string, error) {
+	pubKey, err := db.GetPublickKeyFromPkHash(p.PkHash)
+	if err != nil {
+		return "", jerr.Get("error pubkey for hash", err)
+	}
+	hexPubkey := hex.EncodeToString(pubKey)
+	return hexPubkey, nil
+}
+
 func GetProfiles(selfPkHash []byte, searchString string, offset int, orderType db.UserStatOrderType) ([]*Profile, error) {
 	objProfiles, err := db.GetUniqueMemoAPkHashes(offset, searchString, orderType)
 	if err != nil {
@@ -231,7 +242,7 @@ func GetProfile(pkHash []byte, selfPkHash []byte) (*Profile, error) {
 	var name string
 	var nameTx []byte
 	memoSetName, err := db.GetNameForPkHash(pkHash)
-	if err != nil && ! db.IsRecordNotFoundError(err) {
+	if err != nil && !db.IsRecordNotFoundError(err) {
 		return nil, jerr.Get("error getting MemoSetName for hash", err)
 	}
 	if memoSetName != nil {
@@ -239,7 +250,7 @@ func GetProfile(pkHash []byte, selfPkHash []byte) (*Profile, error) {
 		nameTx = memoSetName.TxHash
 	}
 	memoSetPic, err := db.GetPicForPkHash(pkHash)
-	if err != nil && ! db.IsRecordNotFoundError(err) {
+	if err != nil && !db.IsRecordNotFoundError(err) {
 		return nil, jerr.Get("error getting MemoSetPic for hash", err)
 	}
 	profile := &Profile{
@@ -255,7 +266,7 @@ func GetProfile(pkHash []byte, selfPkHash []byte) (*Profile, error) {
 		profile.Name = fmt.Sprintf("Profile %.16s", profile.GetAddressString())
 	}
 	memoSetProfile, err := db.GetProfileForPkHash(pkHash)
-	if err != nil && ! db.IsRecordNotFoundError(err) {
+	if err != nil && !db.IsRecordNotFoundError(err) {
 		return nil, jerr.Get("error getting MemoSetProfile for hash", err)
 	}
 	if memoSetProfile != nil {

@@ -65,6 +65,7 @@ var privateMessageSubmitRoute = web.Route{
 	Handler: func(r *web.Response) {
 		addressString := r.Request.GetFormValue("address")
 		message := r.Request.GetFormValue("message")
+		pubkey := r.Request.GetFormValue("pubkey")
 		messageAddress := wallet.GetAddressFromString(addressString)
 		if messageAddress.GetEncoded() != addressString {
 			r.Error(jerr.New("error parsing address"), http.StatusUnprocessableEntity)
@@ -91,7 +92,7 @@ var privateMessageSubmitRoute = web.Route{
 		pkHash := privateKey.GetPublicKey().GetAddress().GetScriptAddress()
 		mutex.Lock(pkHash)
 
-		txns, err := build.PrivateMessage(message, addressString, privateKey)
+		txns, err := build.PrivateMessage(message, privateKey, pubkey)
 		if err != nil {
 			var statusCode = http.StatusInternalServerError
 			if build.IsNotEnoughValueError(err) {

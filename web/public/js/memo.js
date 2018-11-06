@@ -42,6 +42,12 @@
                 return
             }
 
+            var pubkey = $form.find("[name=pubkey]").val();
+            if (pubkey.length === 0) {
+                MemoApp.AddAlert("Form error, pubkey not set.");
+                return;
+            }
+
             var message = $message.val();
             if (maxPostBytes - MemoApp.utf8ByteLength(message) < 0) {
                 MemoApp.AddAlert("Maximum post message is " + maxPostBytes + " bytes. Note that some characters are more than 1 byte." +
@@ -76,6 +82,7 @@
                 data: {
                     message: message,
                     address: address,
+                    pubkey: pubkey,
                     password: password
                 },
                 success: function (txHash) {

@@ -1,21 +1,22 @@
 package db
 
 import (
+	"time"
+
 	"github.com/jchavannes/jgo/jerr"
 	"github.com/memocash/memo/app/bitcoin/wallet"
 	"github.com/memocash/memo/app/crypto"
-	"time"
 )
 
 type Key struct {
-	Id        uint   `gorm:"primary_key"`
+	Id        uint `gorm:"primary_key"`
 	Name      string
 	UserId    uint
 	Value     []byte
 	PublicKey []byte `gorm:"unique"`
 	PkHash    []byte `gorm:"unique"`
-	MaxCheck  uint // maximum block height checked for transactions
-	MinCheck  uint // minimum block height checked for transactions
+	MaxCheck  uint   // maximum block height checked for transactions
+	MinCheck  uint   // minimum block height checked for transactions
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -202,4 +203,30 @@ func GetUserIdFromPkHash(pkHash []byte) (uint, error) {
 		return 0, jerr.Get("error getting key for user", err)
 	}
 	return key.UserId, nil
+}
+
+func GetPublickKeyFromPkHash(pkHash []byte) ([]byte, error) {
+	var key Key
+	err := find(&key, Key{
+		PkHash: pkHash,
+	})
+	if err != nil {
+		return []byte(""), jerr.Get("error getting key for user", err)
+	}
+	return key.PublicKey, nil
+}
+
+func GetKeysForPkHashes(pkHashes [][]byte) ([]*Key, error) {
+	var keys []*Key
+	db, err := getDb()
+	if err != nil {
+		return keys, jerr.Get("error getting db", err)
+	}
+	result := db.
+		Where("pk_hash in (?)", pkHashes).
+		Find(&keys)
+	if result.Error != nil {
+		return keys, jerr.Get("error running query", result.Error)
+	}
+	return keys, nil
 }
