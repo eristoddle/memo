@@ -2,6 +2,7 @@ package profile
 
 import (
 	"bytes"
+	"encoding/hex"
 	"strings"
 
 	"github.com/jchavannes/jgo/jerr"
@@ -14,6 +15,7 @@ type Message struct {
 	Content    string
 	SelfPkHash []byte
 	PublicKey  []byte
+	Address    string
 	Memo       *db.MemoPrivateMessage
 	Error      error
 	Name       string
@@ -46,9 +48,10 @@ func GetPrivateMessages(recipientPrivate string, selfPkHash []byte, offset uint)
 	if err != nil {
 		return nil, jerr.Get("error getting messages for hash", err)
 	}
-	messages, err := CreateMessagesFromDbMessages(recipientPrivate, selfPkHash, dbMessages)
+	messages := CreateMessagesFromDbMessages(selfPkHash, dbMessages)
+	err = AttachPublicKeyToMessages(messages)
 	if err != nil {
-		return nil, jerr.Get("error creating messages from db messages", err)
+		return nil, jerr.Get("error attaching profile pics to posts", err)
 	}
 	err = AttachNamesToMessages(messages)
 	if err != nil {
@@ -58,46 +61,44 @@ func GetPrivateMessages(recipientPrivate string, selfPkHash []byte, offset uint)
 	if err != nil {
 		return nil, jerr.Get("error attaching profile pics to posts", err)
 	}
-	err = AttachPublicKeyToMessages(messages)
+	err = DecryptMessages(recipientPrivate, messages)
 	if err != nil {
-		return nil, jerr.Get("error attaching profile pics to posts", err)
+		return nil, jerr.Get("error decrypting messages", err)
 	}
 	return messages, nil
 }
 
-func CreateMessagesFromDbMessages(recipientPrivate string, selfPkHash []byte, dbMessages []*db.MemoPrivateMessage) ([]*Message, error) {
-	var decryptedMessages []*Message
-	for _, message := range dbMessages {
-		var decrypted *Message
+func CreateMessagesFromDbMessages(selfPkHash []byte, dbMessages []*db.MemoPrivateMessage) []*Message {
+	var messages []*Message
+	for _, dbMessage := range dbMessages {
+		message := &Message{
+			SelfPkHash: selfPkHash,
+			Memo:       dbMessage,
+		}
+		messages = append(messages, message)
+	}
+	return messages
+}
+
+func DecryptMessages(recipientPrivate string, messages []*Message) error {
+	for _, message := range messages {
 		if len(recipientPrivate) > 0 {
-			// TODO: Run this concurrently, after switching from api to db pub key results, throttling
-			text, err := util.DecryptPMWithAddress(message.Address, recipientPrivate, message.CompleteMessage)
+			hexPubkey := hex.EncodeToString(message.PublicKey)
+			text, err := util.DecryptPM(hexPubkey, recipientPrivate, message.Memo.CompleteMessage)
 			if err != nil {
-				decrypted = &Message{
-					Content:    message.CompleteMessage,
-					SelfPkHash: selfPkHash,
-					Memo:       message,
-					Error:      err,
-					Reply:      false,
-				}
+				message.Content = message.Memo.CompleteMessage
+				message.Error = err
+				message.Reply = false
 			} else {
-				decrypted = &Message{
-					Content:    text,
-					SelfPkHash: selfPkHash,
-					Memo:       message,
-					Reply:      true,
-				}
+				message.Content = text
+				message.Reply = true
 			}
 		} else {
-			decrypted = &Message{
-				Content: message.CompleteMessage,
-				Memo:    message,
-				Reply:   false,
-			}
+			message.Content = message.Memo.CompleteMessage
+			message.Reply = false
 		}
-		decryptedMessages = append(decryptedMessages, decrypted)
 	}
-	return decryptedMessages, nil
+	return nil
 }
 
 func AttachNamesToMessages(messages []*Message) error {

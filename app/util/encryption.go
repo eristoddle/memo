@@ -106,7 +106,6 @@ func getPubkey(hash string, address string) (string, error) {
 	return pubkey, nil
 }
 
-// TODO: Replace all of this by querying users transactions, also a boolean on message button
 func harvestKey(address string) (string, error) {
 	var pubkey string
 	var record Transactions
