@@ -172,8 +172,6 @@ func GetPrivateMessages(offset uint) ([]*MemoPrivateMessage, error) {
 	if countQuery.Error != nil {
 		return nil, jerr.Get("error running query", countQuery.Error)
 	}
-	// TODO: This query breaks all results if the count is higher than the chunks in the db
-	// And may break with different count values in the results
 	var memoPrivateMessages []*MemoPrivateMessage
 	query := db.Table("memo_private_messages m")
 	selects := "m.*"
@@ -184,7 +182,7 @@ func GetPrivateMessages(offset uint) ([]*MemoPrivateMessage, error) {
 			selects = "m.*, CONCAT(m.message, m0.message"
 			join = fmt.Sprintf("LEFT JOIN memo_private_messages m%d ON m.tx_hash = m%d.link", i, i)
 		} else {
-			selects = fmt.Sprintf("%s, m%d.message", selects, i)
+			selects = fmt.Sprintf("%s, COALESCE(m%d.message, '')", selects, i)
 			join = fmt.Sprintf("LEFT JOIN memo_private_messages m%d ON m%d.tx_hash = m%d.link", i, i-1, i)
 		}
 		joins = append(joins, join)
