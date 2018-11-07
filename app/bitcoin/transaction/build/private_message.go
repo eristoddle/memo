@@ -1,7 +1,6 @@
 package build
 
 import (
-	"log"
 	"sort"
 
 	"github.com/jchavannes/jgo/jerr"
@@ -29,17 +28,10 @@ func PrivateMessage(message string, privateKey *wallet.PrivateKey, pubKey string
 	hexPk := privateKey.GetHex()
 	privateMessage, err := util.EncryptPM(pubKey, hexPk, message)
 
-	// TODO: Remove logs
-	log.Print("original: ", message)
-	log.Print("encrypted: ", privateMessage)
-
 	runes := []rune(privateMessage)
 	firstChunkSize := memo.MaxPostSize - 2
 	start := string(runes[0:firstChunkSize])
 	chain := chunkMessage(runes[firstChunkSize:])
-
-	// TODO: Remove logs
-	log.Print("start: ", start)
 
 	spendableTxOuts, err := db.GetSpendableTransactionOutputsForPkHash(privateKey.GetPublicKey().GetAddress().GetScriptAddress())
 	if err != nil {
@@ -60,17 +52,13 @@ func PrivateMessage(message string, privateKey *wallet.PrivateKey, pubKey string
 
 	lastTxHash := memoTx.MsgTx.TxHash()
 	lastTxHashBytes := lastTxHash.CloneBytes()
-	// TODO: This only works for less than 3 transactions, 3rd gets created never makes it to blockchain
 	for _, chunk := range chain {
-		// TODO: Remove logs
-		log.Print("chain: ", chunk)
-		memoTx, spendableTxOuts, err := buildWithTxOuts([]memo.Output{{
+		memoTx, spendableTxOuts, err = buildWithTxOuts([]memo.Output{{
 			Type:    memo.OutputTypeMemoPrivateMessage,
 			Data:    []byte(chunk),
 			RefData: []byte(lastTxHashBytes),
 		}}, spendableTxOuts, privateKey)
 		if err != nil {
-			log.Print("spendableTxOuts: ", spendableTxOuts)
 			return nil, jerr.Get("error creating tx", err)
 		}
 		lastTxHash := memoTx.MsgTx.TxHash()

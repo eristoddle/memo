@@ -51,15 +51,15 @@ func GetPrivateMessages(recipientPrivate string, selfPkHash []byte, offset uint)
 	messages := CreateMessagesFromDbMessages(selfPkHash, dbMessages)
 	err = AttachPublicKeyToMessages(messages)
 	if err != nil {
-		return nil, jerr.Get("error attaching profile pics to posts", err)
+		return nil, jerr.Get("error attaching profile pics to messages", err)
 	}
 	err = AttachNamesToMessages(messages)
 	if err != nil {
-		return nil, jerr.Get("error attaching names to posts", err)
+		return nil, jerr.Get("error attaching names to messages", err)
 	}
 	err = AttachProfilePicsToMessages(messages)
 	if err != nil {
-		return nil, jerr.Get("error attaching profile pics to posts", err)
+		return nil, jerr.Get("error attaching profile pics to messages", err)
 	}
 	err = DecryptMessages(recipientPrivate, messages)
 	if err != nil {
@@ -172,25 +172,6 @@ func AttachPublicKeyToMessages(messages []*Message) error {
 	}
 	return nil
 }
-
-// func SetShowMediaForPosts(posts []*Message, userId uint) error {
-// 	if userId == 0 {
-// 		for _, post := range posts {
-// 			post.ShowMedia = true
-// 		}
-// 		return nil
-// 	}
-// 	settings, err := cache.GetUserSettings(userId)
-// 	if err != nil {
-// 		return jerr.Get("error getting user settings", err)
-// 	}
-// 	if settings.Integrations == db.SettingIntegrationsAll {
-// 		for _, post := range posts {
-// 			post.ShowMedia = true
-// 		}
-// 	}
-// 	return nil
-// }
 
 func (p Message) GetTimeString(timezone string) string {
 	if p.Memo.BlockId != 0 {
