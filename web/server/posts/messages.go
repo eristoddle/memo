@@ -53,7 +53,7 @@ func getPrivateMessages(r *web.Response) {
 	}
 
 	res.SetPageAndOffset(r, offset)
-	r.Helper["OffsetLink"] = fmt.Sprintf("%s?", strings.TrimLeft(res.UrlPostsThreads, "/"))
+	r.Helper["OffsetLink"] = fmt.Sprintf("%s?", strings.TrimLeft(res.UrlPostsMessages, "/"))
 	r.Helper["Posts"] = messages
 	r.Helper["Title"] = "Memo - Private Messages"
 	r.Render()
