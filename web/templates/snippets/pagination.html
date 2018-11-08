@@ -1,7 +1,7 @@
 <p class="pagination">
-    <a class="{{ if eq .NextOffset 25 }}disabled{{ end }} {{ if .Messages }}.message-page{{ end }}"
+    <a class="{{ if eq .NextOffset 25 }}disabled{{ end }} {{ if .Messages }}message-page{{ end }}"
        href="{{ .OffsetLink }}&offset={{ .PrevOffset }}">&lt; {{ T "previous" }}</a>
     <span class="page">{{ .Page }}</span>
-    <a class="{{ if lt (len .Items) 25 }}disabled{{ end }} {{ if .Messages }}.message-page{{ end }}"
+    <a class="{{ if lt (len .Items) 25 }}disabled{{ end }} {{ if .Messages }}message-page{{ end }}"
        href="{{ .OffsetLink }}&offset={{ .NextOffset }}">{{ T "next" }} &gt;</a>
 </p>
