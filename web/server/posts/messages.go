@@ -35,8 +35,10 @@ func getPrivateMessages(r *web.Response) {
 	}
 	offset := r.Request.GetUrlParameterInt("offset")
 	var messages []*profile.Message
+	decrypted := false
 	password := r.Request.GetFormValue("password")
 	if len(password) > 0 {
+		decrypted = true
 		privateKey, err := key.GetPrivateKey(password)
 		if err != nil {
 			r.Error(jerr.Get("error getting private key", err), http.StatusUnauthorized)
@@ -53,6 +55,7 @@ func getPrivateMessages(r *web.Response) {
 	}
 
 	res.SetPageAndOffset(r, offset)
+	r.Helper["Decrypted"] = decrypted
 	r.Helper["OffsetLink"] = fmt.Sprintf("%s?", strings.TrimLeft(res.UrlPostsMessages, "/"))
 	r.Helper["Posts"] = messages
 	r.Helper["Title"] = "Memo - Private Messages"

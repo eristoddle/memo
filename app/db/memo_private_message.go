@@ -162,8 +162,6 @@ func GetPrivateMessagesForPkHash(pkHash []byte, offset uint) ([]*MemoPrivateMess
 func GetPrivateMessages(offset uint) ([]*MemoPrivateMessage, error) {
 	limit := 25
 	db, err := getDb()
-	db.Debug()
-	db.LogMode(true)
 	if err != nil {
 		return nil, jerr.Get("error getting db", err)
 	}

@@ -1,16 +1,26 @@
 {{ $tz := .TimeZone }}
 {{ $settings := .UserSettings }}
+{{ $decrypted := .Decrypted }}
 
 {{ template "snippets/header.html" . }}
 
 {{ template "posts/snippets/header.html" dict "Page" "messages" "IsLoggedIn" .IsLoggedIn }}
 
-{{ template "snippets/pagination.html" dict "OffsetLink" .OffsetLink "NextOffset" .NextOffset "PrevOffset" .PrevOffset "Page" .Page "Items" .Posts }}
+{{ template "snippets/pagination.html" dict "Messages" true "OffsetLink" .OffsetLink "NextOffset" .NextOffset "PrevOffset" .PrevOffset "Page" .Page "Items" .Posts }}
+
+{{ if not $decrypted }}<input class="btn btn-lg btn-primary password-form" type="submit" value="Decrypt Messages">{{ end }}
 
 {{ range .Posts }}
 {{ template "post/message.html" dict "Post" . "Compress" false "TimeZone" $tz "UserSettings" $settings }}
 {{ end }}
 
-{{ template "snippets/pagination.html" dict "OffsetLink" .OffsetLink "NextOffset" .NextOffset "PrevOffset" .PrevOffset "Page" .Page "Items" .Posts }}
+{{ template "snippets/pagination.html" dict "Messages" true "OffsetLink" .OffsetLink "NextOffset" .NextOffset "PrevOffset" .PrevOffset "Page" .Page "Items" .Posts }}
 
 {{ template "snippets/footer.html" . }}
+
+<script type="text/javascript">
+    $(function () {
+        MemoApp.Form.PrivateMessagePage($(".message-page"));
+        MemoApp.Form.PostPassword($(".password-form"));
+    });
+</script>

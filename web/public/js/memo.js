@@ -1089,4 +1089,34 @@
             $form.submit();
         });
     };
+
+    /**
+     * @param {jQuery} @param {jQuery} $link
+     */
+    MemoApp.Form.PostPassword = function ($link) {
+        $link.click(function (e) {
+            e.preventDefault();
+            var $form = $('<form action="' + window.location + '" method="post">' +
+                '<input type="hidden" name="password" value="' + MemoApp.GetPassword() + '">' +
+                '</form>');
+            $('body').append($form);
+            $form.submit();
+        });
+    };
+
+    /**
+     * @param {jQuery} @param {jQuery} $link
+     */
+    MemoApp.Form.PrivateMessagePage = function ($link) {
+        // /posts/messages?&offset=25
+        console.log($link)
+        $link.click(function (e) {
+            e.preventDefault();
+            var $form = $('<form action="' + MemoApp.URL.MemoPrivateMessages + '" method="post">' +
+                '<input type="hidden" name="password" value="' + MemoApp.GetPassword() + '">' +
+                '</form>');
+            $('body').append($form);
+            $form.submit();
+        });
+    };
 })();
