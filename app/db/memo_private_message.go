@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 	"html"
+	"sort"
 	"time"
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -30,7 +31,16 @@ type MemoPrivateMessage struct {
 }
 
 type Count struct {
-	Max int
+	Count int
+}
+
+func maxCount(counts []Count) int {
+	var v []int
+	for _, count := range counts {
+		v = append(v, count.Count)
+	}
+	sort.Ints(v)
+	return v[len(v)-1]
 }
 
 func (m *MemoPrivateMessage) Save() error {
@@ -152,6 +162,8 @@ func GetPrivateMessagesForPkHash(pkHash []byte, offset uint) ([]*MemoPrivateMess
 func GetPrivateMessages(offset uint) ([]*MemoPrivateMessage, error) {
 	limit := 25
 	db, err := getDb()
+	db.Debug()
+	db.LogMode(true)
 	if err != nil {
 		return nil, jerr.Get("error getting db", err)
 	}
@@ -160,23 +172,24 @@ func GetPrivateMessages(offset uint) ([]*MemoPrivateMessage, error) {
 	// count value = remaining chunks
 	// Get max count value of last limit records
 	// To determine amount of self-joins
-	var count Count
+	var counts []Count
 	countQuery := db.
 		Table("memo_private_messages").
-		Select("MAX(count) AS max").
+		Select("count").
 		Where("count > 0").
 		Offset(offset).
 		Limit(limit).
 		Order("id DESC").
-		Find(&count)
+		Find(&counts)
 	if countQuery.Error != nil {
 		return nil, jerr.Get("error running query", countQuery.Error)
 	}
+	maxCount := maxCount(counts)
 	var memoPrivateMessages []*MemoPrivateMessage
 	query := db.Table("memo_private_messages m")
 	selects := "m.*"
 	var joins []string
-	for i := 0; i < count.Max; i++ {
+	for i := 0; i < maxCount; i++ {
 		var join string
 		if i == 0 {
 			selects = "m.*, CONCAT(m.message, m0.message"
