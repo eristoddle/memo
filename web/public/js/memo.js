@@ -16,7 +16,6 @@
     /**
      * @param {jQuery} $form
      */
-    // TODO: Calculate the transaction count through estimated encrpted size
     MemoApp.Form.PrivateMessage = function ($form) {
         var $message = $form.find("[name=message]");
         var $msgByteCount = $form.find(".message-byte-count");

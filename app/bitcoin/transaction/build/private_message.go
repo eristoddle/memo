@@ -10,9 +10,13 @@ import (
 	"github.com/memocash/memo/app/util"
 )
 
+const (
+	firstChunkSize = memo.MaxPostSize - 2
+	chunkSize      = memo.MaxPrivateMessageSizeChunk
+)
+
 func chunkMessage(runes []rune) []string {
 	var chunks []string
-	chunkSize := memo.MaxPrivateMessageSizeChunk
 	for i := 0; i < len(runes); i += chunkSize {
 		nn := i + chunkSize
 		if nn > len(runes) {
@@ -23,13 +27,26 @@ func chunkMessage(runes []rune) []string {
 	return chunks
 }
 
+// TransactionCount : Get count of transactions to send encrypted message
+func TransactionCount(message string, address string, privateKey *wallet.PrivateKey) (int, error) {
+	hexPk := privateKey.GetHex()
+	privateMessage, err := util.EncryptPM(address, hexPk, message)
+	if err != nil {
+		return 0, jerr.Get("error encrypting private message", err)
+	}
+	runes := []rune(privateMessage)
+	chain := chunkMessage(runes[firstChunkSize:])
+	return len(chain) + 1, nil
+}
+
 // PrivateMessage : Build private message transaction
 func PrivateMessage(message string, privateKey *wallet.PrivateKey, pubKey string) ([]*memo.Tx, error) {
 	hexPk := privateKey.GetHex()
 	privateMessage, err := util.EncryptPM(pubKey, hexPk, message)
-
+	if err != nil {
+		return nil, jerr.Get("error encrypting private message", err)
+	}
 	runes := []rune(privateMessage)
-	firstChunkSize := memo.MaxPostSize - 2
 	start := string(runes[0:firstChunkSize])
 	chain := chunkMessage(runes[firstChunkSize:])
 

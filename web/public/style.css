@@ -1408,3 +1408,9 @@ body.dark .poll .votes {
 .profile-pic {
     border-radius:4px;
 }
+
+.pm-password-form {
+    width: 20%;
+    margin-left: 40%;
+    margin-bottom: 10px;
+}

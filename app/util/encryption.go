@@ -312,15 +312,3 @@ func DecryptPM(hexPubKey string, recipientPrivate string, ciphertext string) (st
 
 	return string(out), nil
 }
-
-// TODO: Make this function
-// TransactionCount : Get count of transactions to send encrypted message
-// func TransactionCount(message string, address string, privateKey *wallet.PrivateKey) (int, error) {
-// 	hexPk := privateKey.GetHex()
-// 	privateMessage, err := EncryptPM(address, hexPk, message)
-// 	if err != nil {
-// 		return 0, jerr.Get("error encrypting private message", err)
-// 	}
-// 	chunkedMessage := chunkMessage(privateMessage)
-// 	return len(chunkedMessage), nil
-// }

@@ -8,7 +8,7 @@
 
 {{ template "snippets/pagination.html" dict "Messages" true "OffsetLink" .OffsetLink "NextOffset" .NextOffset "PrevOffset" .PrevOffset "Page" .Page "Items" .Posts }}
 
-{{ if not $decrypted }}<input class="btn btn-lg btn-primary password-form" type="submit" value="Decrypt Messages">{{ end }}
+{{ if not $decrypted }}<input class="btn btn-lg btn-primary pm-password-form" type="submit" value="Decrypt Messages">{{ end }}
 
 {{ range .Posts }}
 {{ template "post/message.html" dict "Post" . "Compress" false "TimeZone" $tz "UserSettings" $settings }}
@@ -21,6 +21,6 @@
 <script type="text/javascript">
     $(function () {
         MemoApp.Form.PrivateMessagePage($(".message-page:not(.disabled)"));
-        MemoApp.Form.PostPassword($(".password-form"));
+        MemoApp.Form.PostPassword($(".pm-password-form"));
     });
 </script>
