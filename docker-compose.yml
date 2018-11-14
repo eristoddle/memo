@@ -1,0 +1,41 @@
+version: '3.1'
+
+services:
+
+    db:
+        image: mysql
+        command: --default-authentication-plugin=mysql_native_password
+        ports:
+            - 3306:3306
+        environment:
+            MYSQL_ROOT_PASSWORD: example
+            MYSQL_DATABASE: memo
+            MYSQL_USER: memo_user
+            MYSQL_PASSWORD: memo_password
+        volumes:
+            - ~/Downloads/mysql:/var/lib/mysql
+        command: mysqld --sql_mode=""
+
+    # bitcoin-cash:
+    #    image:
+    #        uphold/bitcoin-abc
+    #    ports:
+    #        - 8333:8333
+    #        - 8332:8332
+    #    command: -printtoconsole -rpcallowip=::/0 -disablewallet -rpcbind=127.0.0.1
+    #    environment:
+    #        - BITCOIN_ABC_DATA=/var/lib/bitcoin-cash
+    #    volumes:
+    #        - ~/Downloads/bitcoin-cash:/var/lib/bitcoin-cash
+
+    memcached:
+        image: memcached
+        ports:
+            - 11211:11211
+
+    graphite:
+        image: graphiteapp/docker-graphite-statsd
+        ports:
+            - 8125:8125/udp
+            - 8126:8126
+            - 80:8080
