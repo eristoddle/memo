@@ -32,6 +32,7 @@ func Build(outputs []memo.Output, privateKey *wallet.PrivateKey) (*memo.Tx, erro
 	return memoTx, nil
 }
 
+// TODO: Create way to send to recipient address in first pm transaction
 func buildWithTxOuts(outputs []memo.Output, spendableTxOuts []*db.TransactionOut, privateKey *wallet.PrivateKey) (*memo.Tx, []*db.TransactionOut, error) {
 	var minInput = int64(memo.BaseTxFee + memo.InputFeeP2PKH + memo.OutputFeeP2PKH + memo.DustMinimumOutput)
 

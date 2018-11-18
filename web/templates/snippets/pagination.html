@@ -1,4 +1,5 @@
 <p class="pagination">
+{{/* TODO: Remove when not needed */}}
     <a class="{{ if eq .NextOffset 25 }}disabled{{ end }} {{ if .Messages }}message-page{{ end }}"
        href="{{ .OffsetLink }}&offset={{ .PrevOffset }}">&lt; {{ T "previous" }}</a>
     <span class="page">{{ .Page }}</span>

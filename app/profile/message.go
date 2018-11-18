@@ -43,6 +43,7 @@ func (p Message) GetMessage() string {
 	return msg
 }
 
+// TODO: Add recipient address to call db query
 func GetPrivateMessages(recipientPrivate string, selfPkHash []byte, offset uint) ([]*Message, error) {
 	dbMessages, err := db.GetPrivateMessages(offset)
 	if err != nil {

@@ -6,6 +6,7 @@
     <a {{ if eq $page "top" }}class="sel"{{ end }} href="posts/top">{{ T "Top" }}</a>
     <a {{ if eq $page "new" }}class="sel"{{ end }} href="posts/new">{{ T "new" | Title }}</a>
     <a {{ if eq $page "archive" }}class="sel"{{ end }} href="posts/archive">{{ T "archive" }}</a>
+    {{/* TODO: Remove when not needed */}}
     <a {{ if eq $page "messages" }}class="sel"{{ end }} class="private-message-load" href="posts/messages">{{ T "private messages" | Title }}</a>
 </p>
 

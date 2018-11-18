@@ -13,21 +13,22 @@ import (
 )
 
 type MemoPrivateMessage struct {
-	Id              uint   `gorm:"primary_key"`
-	TxHash          []byte `gorm:"unique;size:50"`
-	ParentHash      []byte
-	PkHash          []byte `gorm:"index:pk_hash"`
-	PkScript        []byte `gorm:"size:500"`
-	Address         string
-	RootTxHash      []byte `gorm:"index:root_tx_hash"`
-	Message         string `gorm:"size:500"`
-	Count           int    `gorm:"count"`
-	Link            []byte `gorm:"index:last_tx_hash"`
-	BlockId         uint
-	Block           *Block
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	CompleteMessage string `gorm:"-"`
+	Id               uint   `gorm:"primary_key"`
+	TxHash           []byte `gorm:"unique;size:50"`
+	ParentHash       []byte
+	PkHash           []byte `gorm:"index:pk_hash"`
+	PkScript         []byte `gorm:"size:500"`
+	Address          string
+	RecipientAddress string `gorm:"recipient_address"`
+	RootTxHash       []byte `gorm:"index:root_tx_hash"`
+	Message          string `gorm:"size:500"`
+	Count            int    `gorm:"count"`
+	Link             []byte `gorm:"index:last_tx_hash"`
+	BlockId          uint
+	Block            *Block
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	CompleteMessage  string `gorm:"-"`
 }
 
 type Count struct {
@@ -159,6 +160,7 @@ func GetPrivateMessagesForPkHash(pkHash []byte, offset uint) ([]*MemoPrivateMess
 	return memoPrivateMessages, nil
 }
 
+// TODO: Add recipient address parameter and add to where
 func GetPrivateMessages(offset uint) ([]*MemoPrivateMessage, error) {
 	limit := 25
 	db, err := getDb()

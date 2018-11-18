@@ -57,6 +57,7 @@ func PrivateMessage(message string, privateKey *wallet.PrivateKey, pubKey string
 	sort.Sort(db.TxOutSortByValue(spendableTxOuts))
 
 	var txns []*memo.Tx
+	// TODO: Implement making buidling this transaction to go to recipient
 	memoTx, spendableTxOuts, err := buildWithTxOuts([]memo.Output{{
 		Type:    memo.OutputTypeMemoPrivateMessage,
 		Data:    []byte(start),

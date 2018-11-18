@@ -13,6 +13,7 @@ import (
 	"github.com/memocash/memo/app/res"
 )
 
+// TODO: move this display functionality
 var messagesRoute = web.Route{
 	Pattern:    res.UrlPostsMessages,
 	NeedsLogin: true,
@@ -45,6 +46,7 @@ func getPrivateMessages(r *web.Response) {
 			return
 		}
 		hexPk := privateKey.GetHex()
+		// TODO: Pass recipient address
 		messages, err = profile.GetPrivateMessages(hexPk, key.PkHash, uint(offset))
 		if err != nil {
 			r.Error(jerr.Get("error getting private messages", err), http.StatusInternalServerError)
