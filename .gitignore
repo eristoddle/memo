@@ -6,3 +6,5 @@
 /memo.exe~
 /memo
 debug
+.vscode
+docker-compose.yml
