@@ -2,7 +2,7 @@ version: '3.1'
 
 services:
 
-    db:
+    mysql:
         image: mysql
         command: --default-authentication-plugin=mysql_native_password
         ports:
@@ -28,14 +28,50 @@ services:
     #    volumes:
     #        - ~/Downloads/bitcoin-cash:/var/lib/bitcoin-cash
 
-    memcached:
+    memcache:
         image: memcached
         ports:
             - 11211:11211
 
-    graphite:
+    statsd:
         image: graphiteapp/docker-graphite-statsd
         ports:
             - 8125:8125/udp
             - 8126:8126
             - 80:8080
+
+    portainer:
+        image: portainer/portainer:latest
+        ports:
+            - 9000:9000
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+
+    memocash:
+        build: .
+        image: eristoddle/memocash
+        command: web --insecure
+        ports:
+            - 8261:8261
+        depends_on:
+            - "mysql"
+            - "memcache"
+            - "statsd"
+
+    action-node:
+        build: .
+        image: eristoddle/memocash
+        command: action-node
+        depends_on:
+            - "mysql"
+            - "memcache"
+            - "statsd"
+
+    user-node:
+        build: .
+        image: eristoddle/memocash
+        command: user-node
+        depends_on:
+            - "mysql"
+            - "memcache"
+            - "statsd"
