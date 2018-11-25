@@ -40,7 +40,7 @@ func TransactionCount(message string, address string, privateKey *wallet.Private
 }
 
 // PrivateMessage : Build private message transaction
-func PrivateMessage(message string, privateKey *wallet.PrivateKey, pubKey string) ([]*memo.Tx, error) {
+func PrivateMessage(message string, privateKey *wallet.PrivateKey, pubKey string, messageAddress wallet.Address) ([]*memo.Tx, error) {
 	hexPk := privateKey.GetHex()
 	privateMessage, err := util.EncryptPM(pubKey, hexPk, message)
 	if err != nil {
@@ -57,12 +57,11 @@ func PrivateMessage(message string, privateKey *wallet.PrivateKey, pubKey string
 	sort.Sort(db.TxOutSortByValue(spendableTxOuts))
 
 	var txns []*memo.Tx
-	// TODO: Implement making buidling this transaction to go to recipient
-	memoTx, spendableTxOuts, err := buildWithTxOuts([]memo.Output{{
+	memoTx, spendableTxOuts, err := buildWithTxOutsAndRecipient([]memo.Output{{
 		Type:    memo.OutputTypeMemoPrivateMessage,
 		Data:    []byte(start),
 		RefData: []byte(string(len(chain))),
-	}}, spendableTxOuts, privateKey)
+	}}, spendableTxOuts, privateKey, messageAddress)
 	if err != nil {
 		return nil, jerr.Get("error creating tx", err)
 	}

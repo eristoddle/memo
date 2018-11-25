@@ -92,7 +92,7 @@ var privateMessageSubmitRoute = web.Route{
 		pkHash := privateKey.GetPublicKey().GetAddress().GetScriptAddress()
 		mutex.Lock(pkHash)
 
-		txns, err := build.PrivateMessage(message, privateKey, pubkey)
+		txns, err := build.PrivateMessage(message, privateKey, pubkey, messageAddress)
 		if err != nil {
 			var statusCode = http.StatusInternalServerError
 			if build.IsNotEnoughValueError(err) {
