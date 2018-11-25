@@ -269,8 +269,13 @@ func saveMemoPrivateMessage(txn *db.Transaction, out *db.TransactionOut, block *
 		count = 0
 		recipient = ""
 	} else {
-		// TODO: Add Recipient Address Here
-		recipient = ""
+		inAddress := txn.TxIn[0].GetAddressString()
+		for _, out := range txn.TxOut {
+			outAddress := out.GetAddressString()
+			if outAddress != inAddress {
+				recipient = outAddress
+			}
+		}
 		link = []byte("")
 		count = int(pushData[2][0])
 	}
