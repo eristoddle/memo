@@ -23,6 +23,6 @@ func GetRoutes() []web.Route {
 		coinsRoute,
 		miniRoute,
 		newRoute,
+		privateMessagesRoute,
 	}
 }
-

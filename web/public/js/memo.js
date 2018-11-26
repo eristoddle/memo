@@ -16,7 +16,6 @@
     /**
      * @param {jQuery} $form
      */
-    // TODO: Remove when not needed
     MemoApp.Form.PrivateMessage = function ($form) {
         var $message = $form.find("[name=message]");
         var $msgByteCount = $form.find(".message-byte-count");
@@ -1075,7 +1074,6 @@
             });
         });
     };
-    // TODO: Remove next 3 when not needed
     /**
      * @param {jQuery} @param {jQuery} $link
      */

@@ -27,6 +27,7 @@
             MemoApp.InitCsrf("{{ .CsrfToken }}");
             MemoApp.SetBaseUrl("{{ .BaseUrl }}");
             MemoApp.Form.LogoutButton($("#header-logout"));
+            MemoApp.Form.PrivateMessageLink($(".private-messages"));
         });
     </script>
 </head>
@@ -86,6 +87,11 @@
                 <li class="hidden-xs nav-item notifications"><a href="notifications">
                 {{ formatUInt .UnreadNotifications }}
                     <span class="glyphicon glyphicon-bell" aria-hidden="true"></span>
+                </a></li>
+                {{/* TODO: Add Message Count ? */}}
+                <li class="hidden-xs nav-item notifications private-messages"><a href="private-messages">
+                {{ formatUInt .UnreadNotifications }}
+                    <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>
                 </a></li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"

@@ -160,8 +160,7 @@ func GetPrivateMessagesForPkHash(pkHash []byte, offset uint) ([]*MemoPrivateMess
 	return memoPrivateMessages, nil
 }
 
-// TODO: Add recipient address parameter and add to where
-func GetPrivateMessages(offset uint) ([]*MemoPrivateMessage, error) {
+func GetPrivateMessages(recipient string, offset uint) ([]*MemoPrivateMessage, error) {
 	limit := 25
 	db, err := getDb()
 	if err != nil {
@@ -177,6 +176,7 @@ func GetPrivateMessages(offset uint) ([]*MemoPrivateMessage, error) {
 		Table("memo_private_messages").
 		Select("count").
 		Where("count > 0").
+		Where(fmt.Sprintf("recipient_address = '%s'", recipient)).
 		Offset(offset).
 		Limit(limit).
 		Order("id DESC").
@@ -210,6 +210,7 @@ func GetPrivateMessages(offset uint) ([]*MemoPrivateMessage, error) {
 
 	query = query.
 		Where("m.count > 0").
+		Where(fmt.Sprintf("m.recipient_address = '%s'", recipient)).
 		Offset(offset).
 		Limit(limit).
 		Order("m.id DESC").

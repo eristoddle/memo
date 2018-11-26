@@ -43,9 +43,8 @@ func (p Message) GetMessage() string {
 	return msg
 }
 
-// TODO: Add recipient address to call db query
-func GetPrivateMessages(recipientPrivate string, selfPkHash []byte, offset uint) ([]*Message, error) {
-	dbMessages, err := db.GetPrivateMessages(offset)
+func GetPrivateMessages(recipientPrivate string, selfPkHash []byte, recipient string, offset uint) ([]*Message, error) {
+	dbMessages, err := db.GetPrivateMessages(recipient, offset)
 	if err != nil {
 		return nil, jerr.Get("error getting messages for hash", err)
 	}
