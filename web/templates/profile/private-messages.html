@@ -8,13 +8,13 @@
     <h2 class="center">{{ T "Private Messages" }}</h2>
 
     {{ if not $decrypted }}<input class="btn btn-lg btn-primary pm-password-form" type="submit" value="Decrypt Messages">{{ end }}
-    {{/* TODO: Fix pagination */}}
+    
     {{ if and (eq .NextOffset 25) (lt (len .Posts) 25) }}{{ else }}
         <p class="pagination">
             <a class="message-page {{ if eq .NextOffset 25 }}disabled{{ end }}" href="private-messages?offset={{ .PrevOffset }}">
                 &lt; {{ T "previous" }}</a>
             <span class="page">{{ .Page }}</span>
-            <a class="message-page {{ if eq (len .Posts) 0 }}disabled{{ end }}" href="private-messages?offset={{ .NextOffset }}">
+            <a class="message-page {{ if lt (len .Posts) 25 }}disabled{{ end }}" href="private-messages?offset={{ .NextOffset }}">
             {{ T "next" }} &gt;</a>
         </p>
     {{ end }}
@@ -42,13 +42,13 @@
             </div>
         </div>
     {{ end }}
-    {{/* TODO: Fix pagination */}}
+   
     {{ if and (eq .NextOffset 25) (lt (len .Posts) 25) }}{{ else }}
         <p class="pagination">
             <a class="message-page {{ if eq .NextOffset 25 }}disabled{{ end }}" href="private-messages?offset={{ .PrevOffset }}">
                 &lt; {{ T "previous" }}</a>
             <span class="page">{{ .Page }}</span>
-            <a class="message-page {{ if eq (len .Posts) 0 }}disabled{{ end }}" href="private-messages?offset={{ .NextOffset }}">
+            <a class="message-page {{ if lt (len .Posts) 25 }}disabled{{ end }}" href="private-messages?offset={{ .NextOffset }}">
             {{ T "next" }} &gt;</a>
         </p>
     {{ end }}

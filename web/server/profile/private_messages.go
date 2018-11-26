@@ -19,7 +19,6 @@ var privateMessagesRoute = web.Route{
 	},
 }
 
-// TODO: refactor this to remove things
 func getPrivateMessages(r *web.Response) {
 	user, err := auth.GetSessionUser(r.Session.CookieId)
 	if err != nil {
