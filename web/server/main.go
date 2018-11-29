@@ -81,6 +81,11 @@ func preHandler(r *web.Response) {
 			r.Error(jerr.Get("error getting last notification id from cache", err), http.StatusInternalServerError)
 			return
 		}
+		unreadMessages, err := cache.GetUnreadMessageCount(user.Id)
+		if err != nil {
+			r.Error(jerr.Get("error getting last private message id from cache", err), http.StatusInternalServerError)
+			return
+		}
 		profilePic, err := cache.GetProfilePic(userAddress.GetScriptAddress())
 		if err != nil {
 			r.Error(jerr.Get("error getting has pic from cache", err), http.StatusInternalServerError)
@@ -88,6 +93,7 @@ func preHandler(r *web.Response) {
 		}
 		r.Helper["ProfilePic"] = profilePic
 		r.Helper["UnreadNotifications"] = unreadNotifications
+		r.Helper["UnreadMessages"] = unreadMessages
 		r.Helper["UserSettings"] = userSettings
 		r.Helper["IsLoggedIn"] = true
 	} else {

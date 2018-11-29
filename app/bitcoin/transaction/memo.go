@@ -296,7 +296,7 @@ func saveMemoPrivateMessage(txn *db.Transaction, out *db.TransactionOut, block *
 	if err != nil {
 		return jerr.Get("error saving memo private message", err)
 	}
-	// addMemoPrivateMessageFeedEvent(memoPrivateMessage)
+	addPrivateMessageNotification(memoPrivateMessage)
 	return nil
 }
 

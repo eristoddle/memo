@@ -6,6 +6,7 @@ import (
 	"github.com/jchavannes/jgo/jerr"
 	"github.com/jchavannes/jgo/web"
 	"github.com/memocash/memo/app/auth"
+	"github.com/memocash/memo/app/cache"
 	"github.com/memocash/memo/app/db"
 	"github.com/memocash/memo/app/profile"
 	"github.com/memocash/memo/app/res"
@@ -50,6 +51,30 @@ func getPrivateMessages(r *web.Response) {
 		}
 	} else {
 		messages, err = profile.GetPrivateMessages("", []byte(""), address, uint(offset))
+	}
+
+	lastMessageId, err := db.GetLastMessageId(user.Id)
+	if err != nil {
+		r.Error(jerr.Get("error getting last message id from db", err), http.StatusInternalServerError)
+		return
+	}
+	var newLastMessageId = lastMessageId
+	for _, message := range messages {
+		if message.GetId() > newLastMessageId {
+			newLastMessageId = message.GetId()
+		}
+	}
+	if newLastMessageId > lastMessageId {
+		err = db.SetLastMessageId(user.Id, newLastMessageId)
+		if err != nil {
+			r.Error(jerr.Get("error setting last message id", err), http.StatusInternalServerError)
+			return
+		}
+		_, err = cache.GetAndSetUnreadMessageCount(user.Id)
+		if err != nil {
+			r.Error(jerr.Get("error updating unread message count in cache", err), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	res.SetPageAndOffset(r, offset)

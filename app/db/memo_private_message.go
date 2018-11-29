@@ -160,6 +160,27 @@ func GetPrivateMessagesForPkHash(pkHash []byte, offset uint) ([]*MemoPrivateMess
 	return memoPrivateMessages, nil
 }
 
+func GetUnreadMessageCount(recipient string, lastMessageId uint) (uint, error) {
+	db, err := getDb()
+	if err != nil {
+		return 0, jerr.Get("error getting db", err)
+	}
+
+	var counts []Count
+	countQuery := db.
+		Table("memo_private_messages").
+		Select("count").
+		Where("count > 0").
+		Where("id > ?", lastMessageId).
+		Where(fmt.Sprintf("recipient_address = '%s'", recipient)).
+		Order("id DESC").
+		Find(&counts)
+	if countQuery.Error != nil {
+		return 0, jerr.Get("error running query", countQuery.Error)
+	}
+	return uint(len(counts)), nil
+}
+
 func GetPrivateMessages(recipient string, offset uint) ([]*MemoPrivateMessage, error) {
 	limit := 25
 	db, err := getDb()

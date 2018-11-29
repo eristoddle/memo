@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"github.com/jchavannes/jgo/jerr"
+	"github.com/memocash/memo/app/cache"
 	"github.com/memocash/memo/app/db"
 	"github.com/memocash/memo/app/notify"
 )
@@ -12,6 +13,7 @@ var (
 	likesToNotify        []*db.MemoLike
 	repliesToNotify      []*db.MemoPost
 	rootTxHashesToUpdate []*db.MemoPost
+	messagesToNotify     []*db.MemoPrivateMessage
 )
 
 func EnableBatchPostProcessing() {
@@ -96,6 +98,13 @@ func addReplyNotification(memoPost *db.MemoPost) {
 	err := notify.AddReplyNotification(memoPost, true)
 	if err != nil {
 		jerr.Get("error adding reply notification", err).Print()
+	}
+}
+
+func addPrivateMessageNotification(memoPrivateMessage *db.MemoPrivateMessage) {
+	err := cache.BatchSetUnreadMessageCount(memoPrivateMessage)
+	if err != nil {
+		jerr.Get("error adding private message notification", err).Print()
 	}
 }
 

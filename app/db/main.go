@@ -57,6 +57,7 @@ var dbInterfaces = []interface{}{
 	FeedEvent{},
 	TopicInfo{},
 	UserStat{},
+	UserMessage{},
 }
 
 func getDb() (*gorm.DB, error) {

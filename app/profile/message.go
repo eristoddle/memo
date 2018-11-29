@@ -191,3 +191,10 @@ func (p Message) GetTimeAgo() string {
 		return util.GetTimeAgo(p.Memo.CreatedAt)
 	}
 }
+
+func (p Message) GetId() uint {
+	if p.Memo == nil {
+		return 0
+	}
+	return p.Memo.Id
+}
