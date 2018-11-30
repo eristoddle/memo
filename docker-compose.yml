@@ -12,8 +12,8 @@ services:
             MYSQL_DATABASE: memo
             MYSQL_USER: memo_user
             MYSQL_PASSWORD: memo_password
-        volumes:
-            - ~/Downloads/mysql:/var/lib/mysql
+        # volumes:
+        #     - ~/Downloads/mysql:/var/lib/mysql
         command: mysqld --sql_mode=""
 
     # bitcoin-cash:
