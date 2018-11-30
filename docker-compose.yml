@@ -52,7 +52,7 @@ services:
         image: eristoddle/memocash
         command: web --insecure
         ports:
-            - 80:8261
+            - 8261:8261
         depends_on:
             - "mysql"
             - "memcache"
