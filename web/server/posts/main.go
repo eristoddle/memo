@@ -11,7 +11,6 @@ func GetRoutes() []web.Route {
 		personalizedRoute,
 		pollsRoute,
 		threadsRoute,
-		messagesRoute,
 	}
 }
 

@@ -1,20 +1,19 @@
-package posts
+package profile
 
 import (
-	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/jchavannes/jgo/jerr"
 	"github.com/jchavannes/jgo/web"
 	"github.com/memocash/memo/app/auth"
+	"github.com/memocash/memo/app/cache"
 	"github.com/memocash/memo/app/db"
 	"github.com/memocash/memo/app/profile"
 	"github.com/memocash/memo/app/res"
 )
 
-var messagesRoute = web.Route{
-	Pattern:    res.UrlPostsMessages,
+var privateMessagesRoute = web.Route{
+	Pattern:    res.UrlProfilePrivateMessages,
 	NeedsLogin: true,
 	Handler: func(r *web.Response) {
 		getPrivateMessages(r)
@@ -22,7 +21,6 @@ var messagesRoute = web.Route{
 }
 
 func getPrivateMessages(r *web.Response) {
-	preHandler(r)
 	user, err := auth.GetSessionUser(r.Session.CookieId)
 	if err != nil {
 		r.Error(jerr.Get("error getting session user", err), http.StatusInternalServerError)
@@ -37,6 +35,7 @@ func getPrivateMessages(r *web.Response) {
 	var messages []*profile.Message
 	decrypted := false
 	password := r.Request.GetFormValue("password")
+	address := key.GetAddress().GetEncoded()
 	if len(password) > 0 {
 		decrypted = true
 		privateKey, err := key.GetPrivateKey(password)
@@ -45,19 +44,41 @@ func getPrivateMessages(r *web.Response) {
 			return
 		}
 		hexPk := privateKey.GetHex()
-		messages, err = profile.GetPrivateMessages(hexPk, key.PkHash, uint(offset))
+		messages, err = profile.GetPrivateMessages(hexPk, key.PkHash, address, uint(offset))
 		if err != nil {
 			r.Error(jerr.Get("error getting private messages", err), http.StatusInternalServerError)
 			return
 		}
 	} else {
-		messages, err = profile.GetPrivateMessages("", []byte(""), uint(offset))
+		messages, err = profile.GetPrivateMessages("", []byte(""), address, uint(offset))
+	}
+
+	lastMessageId, err := db.GetLastMessageId(user.Id)
+	if err != nil {
+		r.Error(jerr.Get("error getting last message id from db", err), http.StatusInternalServerError)
+		return
+	}
+	var newLastMessageId = lastMessageId
+	for _, message := range messages {
+		if message.GetId() > newLastMessageId {
+			newLastMessageId = message.GetId()
+		}
+	}
+	if newLastMessageId > lastMessageId {
+		err = db.SetLastMessageId(user.Id, newLastMessageId)
+		if err != nil {
+			r.Error(jerr.Get("error setting last message id", err), http.StatusInternalServerError)
+			return
+		}
+		_, err = cache.GetAndSetUnreadMessageCount(user.Id)
+		if err != nil {
+			r.Error(jerr.Get("error updating unread message count in cache", err), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	res.SetPageAndOffset(r, offset)
 	r.Helper["Decrypted"] = decrypted
-	r.Helper["OffsetLink"] = fmt.Sprintf("%s?", strings.TrimLeft(res.UrlPostsMessages, "/"))
 	r.Helper["Posts"] = messages
-	r.Helper["Title"] = "Memo - Private Messages"
-	r.Render()
+	r.RenderTemplate(res.TmplProfilePrivateMessages)
 }

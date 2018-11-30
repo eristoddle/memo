@@ -98,17 +98,19 @@ const (
 	UrlProfileCoins           = "/coins"
 	UrlProfileSettingsSubmit  = "/settings-submit"
 	UrlProfileNotifications   = "/notifications"
+	UrlProfilePrivateMessages = "/private-messages"
 	UrlProfileTopicsFollowing = "/profile/topics-following"
 	UrlProfileMini            = "/profile/mini"
 
-	TmplProfiles              = "/profile/all"
-	TmplProfilesNew           = "/profile/new"
-	TmplProfileSettings       = "/profile/settings"
-	TmplProfileAccount        = "/profile/account"
-	TmplProfileCoins          = "/profile/coins"
-	TmplProfileNotifications  = "/profile/notifications"
-	TmplProfilesMostActions   = "/profile/most-actions"
-	TmplProfilesMostFollowers = "/profile/most-followers"
+	TmplProfiles               = "/profile/all"
+	TmplProfilesNew            = "/profile/new"
+	TmplProfileSettings        = "/profile/settings"
+	TmplProfileAccount         = "/profile/account"
+	TmplProfileCoins           = "/profile/coins"
+	TmplProfileNotifications   = "/profile/notifications"
+	TmplProfilePrivateMessages = "/profile/private-messages"
+	TmplProfilesMostActions    = "/profile/most-actions"
+	TmplProfilesMostFollowers  = "/profile/most-followers"
 )
 
 const (
@@ -119,7 +121,6 @@ const (
 	UrlPostsPolls        = "/polls"
 	UrlPostsArchive      = "/posts/archive"
 	UrlPostsPersonalized = "/posts/personalized"
-	UrlPostsMessages     = "/posts/messages"
 
 	TmplPostsPolls = "/posts/polls"
 )

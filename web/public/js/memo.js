@@ -1074,7 +1074,6 @@
             });
         });
     };
-
     /**
      * @param {jQuery} @param {jQuery} $link
      */

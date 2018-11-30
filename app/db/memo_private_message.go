@@ -13,21 +13,22 @@ import (
 )
 
 type MemoPrivateMessage struct {
-	Id              uint   `gorm:"primary_key"`
-	TxHash          []byte `gorm:"unique;size:50"`
-	ParentHash      []byte
-	PkHash          []byte `gorm:"index:pk_hash"`
-	PkScript        []byte `gorm:"size:500"`
-	Address         string
-	RootTxHash      []byte `gorm:"index:root_tx_hash"`
-	Message         string `gorm:"size:500"`
-	Count           int    `gorm:"count"`
-	Link            []byte `gorm:"index:last_tx_hash"`
-	BlockId         uint
-	Block           *Block
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	CompleteMessage string `gorm:"-"`
+	Id               uint   `gorm:"primary_key"`
+	TxHash           []byte `gorm:"unique;size:50"`
+	ParentHash       []byte
+	PkHash           []byte `gorm:"index:pk_hash"`
+	PkScript         []byte `gorm:"size:500"`
+	Address          string
+	RecipientAddress string `gorm:"recipient_address"`
+	RootTxHash       []byte `gorm:"index:root_tx_hash"`
+	Message          string `gorm:"size:500"`
+	Count            int    `gorm:"count"`
+	Link             []byte `gorm:"index:last_tx_hash"`
+	BlockId          uint
+	Block            *Block
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	CompleteMessage  string `gorm:"-"`
 }
 
 type Count struct {
@@ -159,7 +160,28 @@ func GetPrivateMessagesForPkHash(pkHash []byte, offset uint) ([]*MemoPrivateMess
 	return memoPrivateMessages, nil
 }
 
-func GetPrivateMessages(offset uint) ([]*MemoPrivateMessage, error) {
+func GetUnreadMessageCount(recipient string, lastMessageId uint) (uint, error) {
+	db, err := getDb()
+	if err != nil {
+		return 0, jerr.Get("error getting db", err)
+	}
+
+	var counts []Count
+	countQuery := db.
+		Table("memo_private_messages").
+		Select("count").
+		Where("count > 0").
+		Where("id > ?", lastMessageId).
+		Where(fmt.Sprintf("recipient_address = '%s'", recipient)).
+		Order("id DESC").
+		Find(&counts)
+	if countQuery.Error != nil {
+		return 0, jerr.Get("error running query", countQuery.Error)
+	}
+	return uint(len(counts)), nil
+}
+
+func GetPrivateMessages(recipient string, offset uint) ([]*MemoPrivateMessage, error) {
 	limit := 25
 	db, err := getDb()
 	if err != nil {
@@ -175,6 +197,7 @@ func GetPrivateMessages(offset uint) ([]*MemoPrivateMessage, error) {
 		Table("memo_private_messages").
 		Select("count").
 		Where("count > 0").
+		Where(fmt.Sprintf("recipient_address = '%s'", recipient)).
 		Offset(offset).
 		Limit(limit).
 		Order("id DESC").
@@ -208,6 +231,7 @@ func GetPrivateMessages(offset uint) ([]*MemoPrivateMessage, error) {
 
 	query = query.
 		Where("m.count > 0").
+		Where(fmt.Sprintf("m.recipient_address = '%s'", recipient)).
 		Offset(offset).
 		Limit(limit).
 		Order("m.id DESC").

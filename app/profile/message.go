@@ -43,8 +43,8 @@ func (p Message) GetMessage() string {
 	return msg
 }
 
-func GetPrivateMessages(recipientPrivate string, selfPkHash []byte, offset uint) ([]*Message, error) {
-	dbMessages, err := db.GetPrivateMessages(offset)
+func GetPrivateMessages(recipientPrivate string, selfPkHash []byte, recipient string, offset uint) ([]*Message, error) {
+	dbMessages, err := db.GetPrivateMessages(recipient, offset)
 	if err != nil {
 		return nil, jerr.Get("error getting messages for hash", err)
 	}
@@ -190,4 +190,11 @@ func (p Message) GetTimeAgo() string {
 	} else {
 		return util.GetTimeAgo(p.Memo.CreatedAt)
 	}
+}
+
+func (p Message) GetId() uint {
+	if p.Memo == nil {
+		return 0
+	}
+	return p.Memo.Id
 }

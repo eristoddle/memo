@@ -123,6 +123,105 @@ func buildWithTxOuts(outputs []memo.Output, spendableTxOuts []*db.TransactionOut
 	}, spendableTxOuts, nil
 }
 
+// buildWithTxOutsAndRecipient: Sends dust limit output to recipient for first message in private message chain
+func buildWithTxOutsAndRecipient(outputs []memo.Output, spendableTxOuts []*db.TransactionOut, privateKey *wallet.PrivateKey, recipientAddress wallet.Address) (*memo.Tx, []*db.TransactionOut, error) {
+	var minInput = int64(memo.BaseTxFee + memo.InputFeeP2PKH + memo.OutputFeeP2PKH + memo.DustMinimumOutput)
+
+	var spendOutputType memo.OutputType
+	for _, spendOutput := range outputs {
+		switch spendOutput.Type {
+		case memo.OutputTypeP2PK:
+			minInput += memo.OutputFeeP2PKH + spendOutput.Amount
+		default:
+			spendOutputType = spendOutput.Type
+			outputFee, err := getMemoOutputFee(spendOutput)
+			if err != nil {
+				return nil, nil, jerr.Get("error getting memo output fee", err)
+			}
+			minInput += outputFee
+		}
+	}
+
+	var txOutsToUse []*db.TransactionOut
+	var totalInputValue int64
+	for {
+		if len(spendableTxOuts) == 0 {
+			return nil, nil, notEnoughValueError
+		}
+		spendableTxOut := spendableTxOuts[0]
+		spendableTxOuts = spendableTxOuts[1:]
+		txOutsToUse = append(txOutsToUse, spendableTxOut)
+		totalInputValue += spendableTxOut.Value
+		if totalInputValue > minInput {
+			break
+		}
+		minInput += memo.InputFeeP2PKH
+	}
+
+	var fee = int64(memo.BaseTxFee+len(txOutsToUse)*memo.InputFeeP2PKH) + memo.OutputFeeP2PKH*2
+
+	var totalOutputValue int64
+	for _, spendOutput := range outputs {
+		totalOutputValue += spendOutput.Amount
+		switch spendOutput.Type {
+		case memo.OutputTypeP2PK:
+			fee += memo.OutputFeeP2PKH
+		default:
+			outputFee, err := getMemoOutputFee(spendOutput)
+			if err != nil {
+				return nil, nil, jerr.Get("error getting memo output fee", err)
+			}
+			fee += outputFee
+		}
+	}
+
+	var recipientAmount = memo.DustMinimumOutput
+	outputs = append([]memo.Output{{
+		Type:    memo.OutputTypeP2PK,
+		Address: recipientAddress,
+		Amount:  recipientAmount,
+	}}, outputs...)
+
+	var change = totalInputValue - fee - totalOutputValue - recipientAmount
+	if change < memo.DustMinimumOutput {
+		return nil, nil, jerr.New("change value below dust minimum input")
+	}
+	address := privateKey.GetPublicKey().GetAddress()
+	outputs = append([]memo.Output{{
+		Type:    memo.OutputTypeP2PK,
+		Address: address,
+		Amount:  change,
+	}}, outputs...)
+
+	var tx *wire.MsgTx
+	tx, err := transaction.Create(txOutsToUse, privateKey, outputs)
+	if err != nil {
+		return nil, nil, jerr.Get("error creating tx", err)
+	}
+	var inputs []*memo.TxInput
+	for _, txOut := range txOutsToUse {
+		inputs = append(inputs, &memo.TxInput{
+			PkHash:      txOut.KeyPkHash,
+			Value:       txOut.Value,
+			PrevOutHash: txOut.GetHashString(),
+		})
+	}
+	txHash := tx.TxHash()
+	var index uint32 = 0
+	spendableTxOuts = append([]*db.TransactionOut{{
+		TransactionHash: txHash.CloneBytes(),
+		PkScript:        tx.TxOut[index].PkScript,
+		Index:           index,
+		Value:           change,
+	}}, spendableTxOuts...)
+	return &memo.Tx{
+		SelfPkHash: address.GetScriptAddress(),
+		Type:       spendOutputType,
+		MsgTx:      tx,
+		Inputs:     inputs,
+	}, spendableTxOuts, nil
+}
+
 func getMemoOutputFee(output memo.Output) (int64, error) {
 	switch output.Type {
 	case memo.OutputTypeMemoMessage,

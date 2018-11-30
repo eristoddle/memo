@@ -258,6 +258,7 @@ func saveMemoPrivateMessage(txn *db.Transaction, out *db.TransactionOut, block *
 	}
 	var link []byte
 	var count int
+	var recipient string
 	if len(pushData[2]) > 2 {
 		lastTransactionHashRaw := pushData[2]
 		lastTransactionHash, err := chainhash.NewHash(lastTransactionHashRaw)
@@ -266,27 +267,36 @@ func saveMemoPrivateMessage(txn *db.Transaction, out *db.TransactionOut, block *
 		}
 		link = lastTransactionHash.CloneBytes()
 		count = 0
+		recipient = ""
 	} else {
+		inAddress := txn.TxIn[0].GetAddressString()
+		for _, out := range txn.TxOut {
+			outAddress := out.GetAddressString()
+			if outAddress != inAddress {
+				recipient = outAddress
+			}
+		}
 		link = []byte("")
 		count = int(pushData[2][0])
 	}
 	memoPrivateMessage = &db.MemoPrivateMessage{
-		TxHash:     txn.Hash,
-		PkHash:     inputAddress.ScriptAddress(),
-		PkScript:   out.PkScript,
-		ParentHash: parentHash,
-		Address:    inputAddress.EncodeAddress(),
-		Message:    message,
-		Count:      count,
-		Link:       link,
-		BlockId:    blockId,
-		Block:      block,
+		TxHash:           txn.Hash,
+		PkHash:           inputAddress.ScriptAddress(),
+		PkScript:         out.PkScript,
+		ParentHash:       parentHash,
+		Address:          inputAddress.EncodeAddress(),
+		RecipientAddress: recipient,
+		Message:          message,
+		Count:            count,
+		Link:             link,
+		BlockId:          blockId,
+		Block:            block,
 	}
 	err = memoPrivateMessage.Save()
 	if err != nil {
 		return jerr.Get("error saving memo private message", err)
 	}
-	// addMemoPrivateMessageFeedEvent(memoPrivateMessage)
+	addPrivateMessageNotification(memoPrivateMessage)
 	return nil
 }
 

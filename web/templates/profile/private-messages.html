@@ -1,0 +1,64 @@
+{{ template "snippets/header.html" . }}
+
+{{ $settings := .UserSettings }}
+{{ $decrypted := .Decrypted }}
+
+<div class="col-md-8 col-md-offset-2">
+
+    <h2 class="center">{{ T "Private Messages" }}</h2>
+
+    {{ if not $decrypted }}<input class="btn btn-lg btn-primary pm-password-form" type="submit" value="Decrypt Messages">{{ end }}
+    
+    {{ if and (eq .NextOffset 25) (lt (len .Posts) 25) }}{{ else }}
+        <p class="pagination">
+            <a class="message-page {{ if eq .NextOffset 25 }}disabled{{ end }}" href="private-messages?offset={{ .PrevOffset }}">
+                &lt; {{ T "previous" }}</a>
+            <span class="page">{{ .Page }}</span>
+            <a class="message-page {{ if lt (len .Posts) 25 }}disabled{{ end }}" href="private-messages?offset={{ .NextOffset }}">
+            {{ T "next" }} &gt;</a>
+        </p>
+    {{ end }}
+
+    {{ range .Posts }}
+        {{ $postUnique := getUnique 6 }}
+        <a name="post-{{ .Memo.GetTransactionHashString }}"></a>
+        <div class="post rounded box-shadow" id="post-{{ $postUnique }}"
+            data-tx-hash="{{ .Memo.GetTransactionHashString }}">
+            <div class="post-header ">
+                <div class="name">
+                {{ template "post/snippets/name.html" dict "Address" .Memo.GetAddressString "ProfilePic" .ProfilePic "IsFeedItem" false "Name" .Name }}
+                    {{ T "posted" }}
+                    &middot; <span class="time-ago">{{ .GetTimeAgo }}</span>
+                </div>
+            </div>
+            <div class="message">
+                {{ .GetMessage }}
+            </div>
+            <div class="actions">
+                <a id="pm-link-{{ $postUnique }}" class="btn btn-sm btn-default"
+                href="memo/private-message/{{ .Memo.GetAddressString }}">
+                    <span class="glyphicon glyphicon-comment" aria-hidden="true"></span>{{ T "reply_verb" | Title }}
+                </a>
+            </div>
+        </div>
+    {{ end }}
+   
+    {{ if and (eq .NextOffset 25) (lt (len .Posts) 25) }}{{ else }}
+        <p class="pagination">
+            <a class="message-page {{ if eq .NextOffset 25 }}disabled{{ end }}" href="private-messages?offset={{ .PrevOffset }}">
+                &lt; {{ T "previous" }}</a>
+            <span class="page">{{ .Page }}</span>
+            <a class="message-page {{ if lt (len .Posts) 25 }}disabled{{ end }}" href="private-messages?offset={{ .NextOffset }}">
+            {{ T "next" }} &gt;</a>
+        </p>
+    {{ end }}
+</div>
+
+{{ template "snippets/footer.html" . }}
+
+<script type="text/javascript">
+    $(function () {
+        MemoApp.Form.PrivateMessagePage($(".message-page:not(.disabled)"));
+        MemoApp.Form.PostPassword($(".pm-password-form"));
+    });
+</script>
