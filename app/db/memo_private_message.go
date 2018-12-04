@@ -206,7 +206,7 @@ func GetPrivateMessages(recipient string, offset uint) ([]*MemoPrivateMessage, e
 		return nil, jerr.Get("error running query", countQuery.Error)
 	}
 	var memoPrivateMessages []*MemoPrivateMessage
-	if counts == 0 {
+	if len(counts) == 0 {
 		return memoPrivateMessages, nil
 	}
 	maxCount := maxCount(counts)
