@@ -12,7 +12,8 @@ services:
             MYSQL_DATABASE: memo
             MYSQL_USER: memo_user
             MYSQL_PASSWORD: memo_password
-        # volumes:
+        volumes:
+            - /var/lib/mysql:/var/lib/mysql
         #     - ~/Downloads/mysql:/var/lib/mysql
         command: mysqld --sql_mode=""
 
@@ -75,3 +76,17 @@ services:
             - "mysql"
             - "memcache"
             - "statsd"
+
+# docker run --rm \
+#     -p 9000:9000 \
+#     -p 8261:8261 \
+#     -v /var/run/docker.sock:/var/run/docker.sock \
+#     -v "$PWD:/rootfs/$PWD" \
+#     -w="/rootfs/$PWD" \
+#     docker/compose:1.13.0 up
+
+# docker run --rm \
+#     -v /var/run/docker.sock:/var/run/docker.sock \
+#     -v "$PWD:/rootfs/$PWD" \
+#     -w="/rootfs/$PWD" \
+#     docker/compose:1.13.0 up
