@@ -205,8 +205,11 @@ func GetPrivateMessages(recipient string, offset uint) ([]*MemoPrivateMessage, e
 	if countQuery.Error != nil {
 		return nil, jerr.Get("error running query", countQuery.Error)
 	}
-	maxCount := maxCount(counts)
 	var memoPrivateMessages []*MemoPrivateMessage
+	if counts == 0 {
+		return memoPrivateMessages, nil
+	}
+	maxCount := maxCount(counts)
 	query := db.Table("memo_private_messages m")
 	selects := "m.*"
 	var joins []string
